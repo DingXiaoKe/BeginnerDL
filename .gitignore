@@ -7,7 +7,7 @@
 *.pyc
 .DS_Store
 data/**
-log/**
+logs/**
 weights/**
 *.pkl
 
