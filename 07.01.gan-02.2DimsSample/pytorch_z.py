@@ -7,12 +7,15 @@ from keras_commons import sampler as sampler
 from keras_commons import visualize as visualizer
 import torch.nn.functional as F
 from torch import optim as tOpt
+from keras_callbacks import ProgressBarCallback as bar
+import imageio
+
 PHRASE = "TRAIN"
 
 DIMENSION = 2
 
 cuda = False
-bs = 2000
+bs = 3000
 z_dim = 2
 input_path = "inputs/Z.jpg"
 
@@ -28,9 +31,9 @@ if PHRASE == "TRAIN":
             self.map1 = nn.Linear(input_size, hidden_size)
             self.map2 = nn.Linear(hidden_size, output_size)
 
-    def forward(self, x):
-        x = F.leaky_relu(self.map1(x), 0.1)
-        return F.sigmoid(self.map2(x))
+        def forward(self, x):
+            x = F.leaky_relu(self.map1(x), 0.1)
+            return F.sigmoid(self.map2(x))
 
     class DeepMLP(nn.Module):
         def __init__(self, input_size, hidden_size, output_size):
@@ -47,13 +50,13 @@ if PHRASE == "TRAIN":
     discriminator = SimpleMLP(input_size=DIMENSION, hidden_size=100, output_size=1)
     if cuda:
         generator.cuda()
-    discriminator.cuda()
+        discriminator.cuda()
     criterion = nn.BCELoss()
 
     d_optimizer = tOpt.Adadelta(discriminator.parameters(), lr=1)
     g_optimizer = tOpt.Adadelta(generator.parameters(), lr=1)
-
-    for train_iter in range(2000):
+    progBar = bar.ProgressBarGAN(1, bs, "D Loss:(real/fake) %.3f/%.3f,G Loss:%.3f")
+    for train_iter in range(1, bs + 1):
         for d_index in range(3):
             # 1. Train D on real+fake
             discriminator.zero_grad()
@@ -104,13 +107,13 @@ if PHRASE == "TRAIN":
             g_loss.backward()
             g_optimizer.step()  # Only optimizes G's parameters
 
-        if train_iter % 100 == 0:
-            loss_d_real = d_real_loss.data.cpu().numpy()[0] if cuda else d_real_loss.data.numpy()[0]
-            loss_d_fake = d_fake_loss.data.cpu().numpy()[0] if cuda else d_fake_loss.data.numpy()[0]
-            loss_g = g_loss.data.cpu().numpy()[0] if cuda else g_loss.data.numpy()[0]
+        loss_d_real = d_real_loss.data.cpu().numpy()[0] if cuda else d_real_loss.data.numpy()[0]
+        loss_d_fake = d_fake_loss.data.cpu().numpy()[0] if cuda else d_fake_loss.data.numpy()[0]
+        loss_g = g_loss.data.cpu().numpy()[0] if cuda else g_loss.data.numpy()[0]
 
+        progBar.show(loss_d_real, loss_d_fake, loss_g)
+        if train_iter == 1 or train_iter % 100 == 0:
             msg = 'Iteration {}: D_loss(real/fake): {:.6g}/{:.6g} G_loss: {:.6g}'.format(train_iter, loss_d_real, loss_d_fake, loss_g)
-            print(msg)
 
             gen_samples = g_fake_data.data.cpu().numpy() if cuda else g_fake_data.data.numpy()
 
@@ -124,6 +127,13 @@ if PHRASE == "TRAIN":
                 visualizer.savefig(export_filepath)
     torch.save(generator, "generator.pkl")
     torch.save(discriminator, "discriminator.pkl")
+
+    filenames=sorted((os.path.join(output_dir, fn) for fn in os.listdir(output_dir) if fn.endswith('.png')))
+    images = []
+    for filename in filenames:
+        images.append(imageio.imread(filename))
+    imageio.mimsave('{}.gif'.format(filename[:filename.rfind('.')]), images,duration=0.1)
+
     if not True:
         visualizer.show()
 else:
