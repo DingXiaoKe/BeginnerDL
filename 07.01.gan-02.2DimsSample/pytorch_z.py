@@ -14,8 +14,9 @@ PHRASE = "TRAIN"
 
 DIMENSION = 2
 
+iterations = 3000
 cuda = False
-bs = 3000
+bs = 2000
 z_dim = 2
 input_path = "inputs/Z.jpg"
 
@@ -55,8 +56,8 @@ if PHRASE == "TRAIN":
 
     d_optimizer = tOpt.Adadelta(discriminator.parameters(), lr=1)
     g_optimizer = tOpt.Adadelta(generator.parameters(), lr=1)
-    progBar = bar.ProgressBarGAN(1, bs, "D Loss:(real/fake) %.3f/%.3f,G Loss:%.3f")
-    for train_iter in range(1, bs + 1):
+    progBar = bar.ProgressBarGAN(1, iterations, "D Loss:(real/fake) %.3f/%.3f,G Loss:%.3f")
+    for train_iter in range(1, iterations + 1):
         for d_index in range(3):
             # 1. Train D on real+fake
             discriminator.zero_grad()
