@@ -1,0 +1,13 @@
+# Created by .ignore support plugin (hsz.mobi)
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+*.pyc
+.DS_Store
+data/**
+log/**
+weights/**
+*.pkl
+
