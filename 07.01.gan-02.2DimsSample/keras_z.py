@@ -83,24 +83,24 @@ gan.compile(loss='binary_crossentropy', optimizer=opt)
 progBar = bar.ProgressBarGAN(1, 2000, "D Loss:%.3f,G Loss:%.3f")
 
 for epoch_iter in range(1, 2001):
+    for index in range(20):
+        real_samples = sampler.sample_2d(lut_2d, bs)
+        # print(real_samples.shape)
 
-    real_samples = sampler.sample_2d(lut_2d, bs)
-    # print(real_samples.shape)
+        noise = torch.randn(bs, z_dim) # np.random.normal(-1, 1, size=[bs, z_dim])
+        generateImage = generator.predict(noise.numpy())
 
-    noise = torch.randn(bs, z_dim) # np.random.normal(-1, 1, size=[bs, z_dim])
-    generateImage = generator.predict(noise.numpy())
-
-    discriminator.trainable = True
-    yDis = np.zeros(2*bs)
-    yDis[:bs] = 1
-    d_loss = discriminator.train_on_batch(
-        np.concatenate((real_samples, generateImage)), yDis)
-
-    noise = torch.randn(bs, z_dim)#np.random.normal(-1, 1, size=[bs, z_dim])
-    generateImage = generator.predict(noise.numpy())
-    yGen = np.ones(bs)
-    discriminator.trainable = False
-    g_loss = gan.train_on_batch(noise, yGen)
+        discriminator.trainable = True
+        yDis = np.zeros(2*bs)
+        yDis[:bs] = 1
+        d_loss = discriminator.train_on_batch(
+            np.concatenate((real_samples, generateImage)), yDis)
+    for index in range(1):
+        noise = torch.randn(bs, z_dim)#np.random.normal(-1, 1, size=[bs, z_dim])
+        generateImage = generator.predict(noise.numpy())
+        yGen = np.ones(bs)
+        discriminator.trainable = False
+        g_loss = gan.train_on_batch(noise, yGen)
 
     progBar.show(d_loss, g_loss)
 
