@@ -1,11 +1,10 @@
 # coding=utf-8
-import torch
 from torch import nn
 from torch.autograd import Variable
 from torch.utils import data
 import torchvision
 from library.keras_callbacks import ProgressBarCallback as bar
-from library.datareader.pytorch.MNIST import MNISTDataSet as reader
+from lib.datareader.pytorch.MNIST import MNISTDataSet
 from torch.optim import Adam
 
 EPOCH = 10
@@ -46,7 +45,7 @@ autoencoder = AutoEncoder()
 optimizer = Adam(autoencoder.parameters(), lr=LR)
 loss_func = nn.MSELoss()
 
-train_data = reader.MyMnistDataSet(train=True, transform=torchvision.transforms.ToTensor())
+train_data = MNISTDataSet(train=True, transform=torchvision.transforms.ToTensor())
 train_loader = data.DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
 proBar = bar.ProgressBarGAN(EPOCH, len(train_loader), "loss:%.3f")
 
