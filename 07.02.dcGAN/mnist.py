@@ -9,6 +9,7 @@ from keras import optimizers as KOpts
 import numpy as np
 import pickle
 from matplotlib import pyplot as plt
+from keras import utils as kutils
 
 PHRASE = "TRAIN"
 
@@ -80,6 +81,7 @@ if PHRASE == "TRAIN":
     x = generator(ganInput)
     ganOutput = discriminator(x)
     gan = KModels.Model(inputs=ganInput, outputs=ganOutput)
+    # gan = kutils.multi_gpu_model(gan, 2)
     gan.compile(loss='binary_crossentropy', optimizer=adam)
 
     dLosses = []

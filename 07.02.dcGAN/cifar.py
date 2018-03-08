@@ -6,6 +6,7 @@ from keras_callbacks import ProgressBarCallback as bar
 import numpy as np
 import pickle
 from matplotlib import pyplot as plt
+from keras import utils as kutils
 
 def builder_generator(randomDim):
     model = KModels.Sequential()
@@ -74,12 +75,14 @@ if PHRASE == "TRAIN":
     ganInput = KLayers.Input(shape=(100,))
     ganOutput = discriminator(generator(ganInput))
     dcgan = KModels.Model(inputs=ganInput, outputs=ganOutput)
+    dcgan = kutils.multi_gpu_model(dcgan, 2)
     dcgan.compile(loss='binary_crossentropy', optimizer=adam)
     dLosses = []
     gLosses = []
     batchSize = 32
     epochs = 20
-
+    dloss = 0
+    gloss = 0
     for epoch in range(1, (epochs + 1)):
         batchCount = imageList.shape[0] // batchSize
         print('Epochs:', epochs)
