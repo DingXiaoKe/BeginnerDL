@@ -5,7 +5,7 @@ from torch.utils import data as data
 from torch.autograd import Variable
 import torchvision
 from matplotlib import pyplot as plt
-from library.datareader.pytorch.MNIST import MNISTDataSet as reader
+from library.datareader.pytorch.MNIST import MNISTDataSet
 from torch.optim import Adam
 from library.keras_callbacks import ProgressBarCallback as bar
 from torch.nn import functional as F
@@ -48,8 +48,8 @@ class CNN(nn.Module):
 # )
 
 # print(train_data.train_data)
-train_data = reader.MyMnistDataSet(train=True, transform=torchvision.transforms.ToTensor())
-test_data  = reader.MyMnistDataSet(train=False)
+train_data = MNISTDataSet(train=True, transform=torchvision.transforms.ToTensor())
+test_data  = MNISTDataSet(train=False)
 train_loader = data.DataLoader(dataset=train_data, batch_size=BATCH_SIZE,
                                shuffle=True)
 # test_x = Variable(torch.unsqueeze(test_data.test_data, dim=1), volatile=True).type(torch.FloatTensor)[:2000]/255.   # shape from (2000, 28, 28) to (2000, 1, 28, 28), value in range(0,1)
