@@ -4,7 +4,7 @@ from keras_datareaders import mnistReader as reader
 from PIL import Image
 import torch
 
-class MyMnistDataSet(Dataset):
+class MNISTDataSet(Dataset):
     def __init__(self, root="../data/mnist.npz", train=True, transform=None, target_transform=None):
         self.root = root
         self.transform = transform

@@ -242,7 +242,6 @@ def densenet(depth=40, nb_dense_block=3, growth_rate=12, nb_filter=16, dropout_r
     densenet = Model(inputs=model_input, outputs=x)
     return densenet
 
-
 def senet():
     image_input = Input(shape=(cfg.IMAGE_SIZE, cfg.IMAGE_SIZE, cfg.IMAGE_CHANNEL))
     network = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding="SAME")(image_input)
