@@ -5,7 +5,7 @@ from torch.utils import data as data
 from torch.autograd import Variable
 import torchvision
 from matplotlib import pyplot as plt
-from library.datareader import pytorch as reader
+from library.datareader.pytorch.MNIST import MNISTDataSet as reader
 from torch.optim import Adam
 from library.keras_callbacks import ProgressBarCallback as bar
 from torch.nn import functional as F

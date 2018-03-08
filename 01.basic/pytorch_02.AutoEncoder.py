@@ -5,7 +5,7 @@ from torch.autograd import Variable
 from torch.utils import data
 import torchvision
 from library.keras_callbacks import ProgressBarCallback as bar
-from library.datareader import pytorch as reader
+from library.datareader.pytorch.MNIST import MNISTDataSet as reader
 from torch.optim import Adam
 
 EPOCH = 10
