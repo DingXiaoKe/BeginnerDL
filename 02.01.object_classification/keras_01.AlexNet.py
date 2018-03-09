@@ -1,20 +1,20 @@
 import tensorflow as tf
 import math
 import os
-import keras.backend as K
 
+import keras.backend as K
 from keras import losses as Klosses
 from keras import optimizers as Koptimizers
 from keras import utils as Kutils
 from keras.preprocessing import image as Kimage
 from keras import callbacks as Kcallbacks
 
-from keras_callbacks import ProgressBarCallback as Mprogress
-from keras_datareaders import ClassificationReader as MclassReader
-from keras_config import cifar10Config as MConfig
-from keras_models import cifar as cifarNet
+from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
+from lib.datareader.DataReaderForClassification import DataReader
+from lib.config.cifarConfig import Cifar10Config
+from lib.models.keras.cifar import alexnet
 
-cfg = MConfig.Cifar10Config()
+cfg = Cifar10Config()
 
 GPU_NUM = cfg.GPU_NUM
 EPOCH_NUM = cfg.EPOCH_NUM
@@ -28,7 +28,7 @@ def lr_schedule(epoch):
 
 session = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 K.set_session(session)
-model = cifarNet.alexnet()
+model = alexnet()
 if GPU_NUM >= 2:
     model = Kutils.multi_gpu_model(model, gpus=GPU_NUM)
 
@@ -45,12 +45,12 @@ train_dataGen = Kimage.ImageDataGenerator(
 train_generator = train_dataGen.flow_from_directory(directory=os.path.join(cfg.DATAPATH, "cifar10", "train"),
                                                     target_size=(cfg.IMAGE_SIZE,cfg.IMAGE_SIZE), batch_size=cfg.BATCH_SIZE,
                                   class_mode='categorical')
-probar = Mprogress.ProgressBarCallback()
+probar = ProgressBar()
 es = Kcallbacks.EarlyStopping(monitor='val_acc', patience=EPOCH_NUM)
 checkpoint = Kcallbacks.ModelCheckpoint(filepath="cifar10_alexnet.h5", save_best_only=True, save_weights_only=True)
 lrate = Kcallbacks.LearningRateScheduler(lr_schedule)
 
-reader = MclassReader.ClassificationReader(dataPath=os.path.join(cfg.DATAPATH, "cifar10"))
+reader = DataReader(dataPath=os.path.join(cfg.DATAPATH, "cifar10"))
 x_test, y_test = reader.readData(phrase="test")
 y_test = Kutils.to_categorical(y_test, num_classes=cfg.NUM_OUTPUTS)
 

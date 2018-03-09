@@ -1,11 +1,11 @@
 import tensorflow as tf
-from keras_callbacks.ProgressBarCallback import ProgressBarCallback
+from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
 from keras.preprocessing.image import ImageDataGenerator
 from keras_datareaders.ClassificationReader import ClassificationReader
 from keras.utils import multi_gpu_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
 import math
-from keras_models.cifar import densenet
+from models.keras.cifar import densenet
 import keras.backend as K
 from keras.losses import categorical_crossentropy
 from keras.optimizers import SGD

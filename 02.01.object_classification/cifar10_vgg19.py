@@ -1,16 +1,16 @@
 import tensorflow as tf
-from keras_callbacks.ProgressBarCallback import ProgressBarCallback
+from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
 from keras.preprocessing.image import ImageDataGenerator
 from keras_datareaders.ClassificationReader import ClassificationReader
 from keras.utils import multi_gpu_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
 import math
-from keras_models.cifar import vgg19
+from models.keras.cifar import vgg19
 import keras.backend as K
 from keras.optimizers import SGD
 from keras.losses import categorical_crossentropy
 from keras.utils import to_categorical
-
+from keras.applications import vgg16
 GPU_NUM = 2
 EPOCH_NUM = 100
 
