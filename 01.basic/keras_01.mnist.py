@@ -1,6 +1,6 @@
 import os
 import keras.utils as np_utils
-from keras_callbacks.ProgressBarCallback import ProgressBarCallback
+from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
 import numpy as np
 from keras.layers import Conv2D, BatchNormalization,MaxPooling2D, Dense, Dropout, Flatten
 from keras.models import Sequential

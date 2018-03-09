@@ -6,7 +6,7 @@ from torch.autograd import Variable
 import torchvision
 from lib.datareader.pytorch.MNIST import MNISTDataSet
 from torch.optim import Adam
-from library.keras_callbacks import ProgressBarCallback as bar
+from utils.progressbar.ProgressBar import ProgressBar
 from torch.nn import functional as F
 
 torch.manual_seed(1)
@@ -57,7 +57,7 @@ train_loader = data.DataLoader(dataset=train_data, batch_size=BATCH_SIZE,
 cnn = CNN()
 optimizer = Adam(cnn.parameters(), lr=LR)
 loss_func = nn.CrossEntropyLoss()
-proBar = bar.ProgressBarGAN(EPOCH, len(train_loader), "train loss: %.3f | test accuracy: %.3f")
+proBar = ProgressBar(EPOCH, len(train_loader), "train loss: %.3f | test accuracy: %.3f")
 for epoch in range(EPOCH):
     for step, (x,y) in enumerate(train_loader):
         b_x = Variable(x)

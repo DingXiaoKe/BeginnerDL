@@ -3,7 +3,7 @@ from torch import nn
 from torch.autograd import Variable
 from torch.utils import data
 import torchvision
-from library.keras_callbacks import ProgressBarCallback as bar
+from utils.progressbar.keras import ProgressBarCallback as bar
 from lib.datareader.pytorch.MNIST import MNISTDataSet
 from torch.optim import Adam
 
