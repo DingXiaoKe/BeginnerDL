@@ -1,20 +1,24 @@
 import tensorflow as tf
-from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
-from keras.preprocessing.image import ImageDataGenerator
-from keras_datareaders.ClassificationReader import ClassificationReader
+import math
+import scipy
+
+import keras.backend as K
 from keras.utils import multi_gpu_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
-import math
-from models.keras.cifar import densenet
-import keras.backend as K
-from keras.losses import categorical_crossentropy
 from keras.optimizers import SGD
+from keras.losses import categorical_crossentropy
 from keras.utils import to_categorical
+from keras.applications import VGG19, ResNet50, DenseNet121
+from keras.preprocessing.image import ImageDataGenerator
 
-GPU_NUM = 2
+from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
+from lib.datareader.DataReaderForClassification import DataReader
+
+from skimage.transform import resize
+import cv2
+
+GPU_NUM = 1
 EPOCH_NUM = 100
-densenet_depth = 40
-densenet_growth_rate = 12
 
 def lr_schedule(epoch):
     initial_lrate = 0.01
@@ -25,8 +29,7 @@ def lr_schedule(epoch):
 
 session = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 K.set_session(session)
-model = densenet(depth=densenet_depth,
-                 growth_rate = densenet_growth_rate)
+model = VGG19(include_top=True,weights=None, input_shape=(32 * 2,32 * 2,3), classes=10)
 if GPU_NUM >= 2:
     model = multi_gpu_model(model, gpus=GPU_NUM)
 
@@ -41,17 +44,17 @@ train_dataGen = ImageDataGenerator(
     zoom_range=0.2,
     horizontal_flip=True)
 
-train_generator = train_dataGen.flow_from_directory(directory="../data/cifar10/train", target_size=(32,32), batch_size=100,
+train_generator = train_dataGen.flow_from_directory(directory="../data/cifar10/train", target_size=(32*2,32*2), batch_size=100,
                                                     class_mode='categorical')
-probar = ProgressBarCallback()
+probar = ProgressBar()
 es = EarlyStopping(monitor='val_acc', patience=EPOCH_NUM)
-checkpoint = ModelCheckpoint(filepath="cifar10_densenet.h5", save_best_only=True, save_weights_only=True)
+checkpoint = ModelCheckpoint(filepath="cifar10_alexnet.h5", save_best_only=True, save_weights_only=True)
 lrate = LearningRateScheduler(lr_schedule)
 
-reader = ClassificationReader()
+reader = DataReader()
 x_test, y_test = reader.readData(phrase="test")
 y_test = to_categorical(y_test, num_classes=10)
-
+x_test = scipy.misc.imresize(x_test, 64, interp='cubic')
 model.fit_generator(generator=train_generator, steps_per_epoch=50000/100,
                     epochs=EPOCH_NUM, verbose=0,
                     validation_data=(x_test, y_test),validation_steps=10000/100,
@@ -60,3 +63,4 @@ model.fit_generator(generator=train_generator, steps_per_epoch=50000/100,
 # scores = model.evaluate(x_test, y_test, verbose=1, steps=EPOCH_NUM)
 # print('Test loss:', scores[0])
 # print('Test accuracy:', scores[1])
+

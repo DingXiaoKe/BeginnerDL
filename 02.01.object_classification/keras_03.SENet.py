@@ -1,18 +1,22 @@
 import tensorflow as tf
-from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
-from keras.preprocessing.image import ImageDataGenerator
 import math
-from keras.utils import multi_gpu_model
-from keras.callbacks import EarlyStopping, LearningRateScheduler, ModelCheckpoint
-from keras_datareaders.ClassificationReader import ClassificationReader
-from models.keras.cifar import resnet_V2
+
 import keras.backend as K
 from keras.losses import categorical_crossentropy
 from keras.optimizers import SGD
 from keras.utils import to_categorical
+from keras.utils import multi_gpu_model
+from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
+from keras.preprocessing.image import ImageDataGenerator
+
+from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
+from lib.datareader.DataReaderForClassification import DataReader
+from lib.models.keras.cifar import SENet
+from lib.config.cifarConfig import Cifar10Config
 
 GPU_NUM = 2
 EPOCH_NUM = 100
+cfg = Cifar10Config()
 
 def lr_schedule(epoch):
     initial_lrate = 0.01
@@ -23,13 +27,11 @@ def lr_schedule(epoch):
 
 session = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 K.set_session(session)
-image_input = Input(shape=(32,32,3))
+model = SENet(cfg).network()
 
-n = 3
-depth = n * 6 + 2
-model =resnet_V2(depth=depth)
 if GPU_NUM >= 2:
     model = multi_gpu_model(model, gpus=GPU_NUM)
+
 
 model.compile(loss=categorical_crossentropy,
               optimizer=SGD(lr=0.0, momentum=0.9, nesterov=True),
@@ -41,14 +43,15 @@ train_dataGen = ImageDataGenerator(
     zoom_range=0.2,
     horizontal_flip=True)
 
-train_generator = train_dataGen.flow_from_directory(directory="../data/cifar10/train", target_size=(32,32), batch_size=100,
-                                                    class_mode='categorical')
-probar = ProgressBarCallback()
+train_generator = train_dataGen.flow_from_directory(directory="../data/cifar10/train", target_size=(cfg.IMAGE_SIZE,cfg.IMAGE_SIZE),
+                                                    batch_size=cfg.BATCH_SIZE,
+                                  class_mode='categorical')
+probar = ProgressBar()
 es = EarlyStopping(monitor='val_acc', patience=EPOCH_NUM)
 checkpoint = ModelCheckpoint(filepath="cifar10_alexnet.h5", save_best_only=True, save_weights_only=True)
 lrate = LearningRateScheduler(lr_schedule)
 
-reader = ClassificationReader()
+reader = DataReader()
 x_test, y_test = reader.readData(phrase="test")
 y_test = to_categorical(y_test, num_classes=10)
 
@@ -60,4 +63,3 @@ model.fit_generator(generator=train_generator, steps_per_epoch=50000/100,
 # scores = model.evaluate(x_test, y_test, verbose=1, steps=EPOCH_NUM)
 # print('Test loss:', scores[0])
 # print('Test accuracy:', scores[1])
-

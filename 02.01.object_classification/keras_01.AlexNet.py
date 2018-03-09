@@ -12,7 +12,7 @@ from keras import callbacks as Kcallbacks
 from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
 from lib.datareader.DataReaderForClassification import DataReader
 from lib.config.cifarConfig import Cifar10Config
-from lib.models.keras.cifar import alexnet
+from lib.models.keras.cifar import AlexNet
 
 cfg = Cifar10Config()
 
@@ -28,7 +28,8 @@ def lr_schedule(epoch):
 
 session = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 K.set_session(session)
-model = alexnet()
+model = AlexNet(cfg).network()
+
 if GPU_NUM >= 2:
     model = Kutils.multi_gpu_model(model, gpus=GPU_NUM)
 

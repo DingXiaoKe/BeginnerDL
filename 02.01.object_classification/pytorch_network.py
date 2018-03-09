@@ -9,10 +9,13 @@ from torch.autograd import Variable
 from torch.nn.functional import softmax
 import torchvision.datasets.cifar
 from lib.utils.progressbar.ProgressBar import ProgressBar
+
+from lib.models.pytorch.cifar import SENet
+
 EPOCH = 20
 BATCH_SIZE = 100
 LR = 0.001
-MODEL = "resnet50"
+MODEL = "senet"
 
 MODEL_LIST = [
     {
@@ -47,6 +50,12 @@ MODEL_LIST = [
     {
         "name" : "densenet121",
         "model" : densenet121,
+        "pretrained" : False,
+        "transform" : torchvision.transforms.ToTensor()
+    },
+    {
+        "name" : "senet",
+        "model" : SENet,
         "pretrained" : False,
         "transform" : torchvision.transforms.ToTensor()
     }
