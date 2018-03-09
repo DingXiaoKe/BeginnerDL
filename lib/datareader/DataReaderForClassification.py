@@ -30,7 +30,7 @@ class DataReader(object):
         for index, image in enumerate(imagelist):
             label = labellist[index]
             imageData = read_image_bgr(os.path.join(self.dataPath, phrase, label, image))
-            imageData = imageData.astype('float32') / 255
+            imageData = imageData.astype(np.uint8)
             reImageList[index] = imageData
             reLabelList[index] = label
 

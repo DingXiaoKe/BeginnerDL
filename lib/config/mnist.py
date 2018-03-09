@@ -1,4 +1,4 @@
-from keras_config.Config import Config
+from config.Config import Config
 
 class MNISTConfig(Config):
     def __init__(self):
