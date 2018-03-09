@@ -1,4 +1,4 @@
-from keras_config.Config import Config
+from config.Config import Config
 
 class YoloV1Config(Config):
     def __init__(self):

@@ -1,4 +1,4 @@
-from keras_config.Config import Config
+from config.Config import Config
 import numpy as np
 
 class YoloV2Config(Config):

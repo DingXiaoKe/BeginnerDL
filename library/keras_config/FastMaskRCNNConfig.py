@@ -1,5 +1,3 @@
-from keras_config.Config import Config
-import os
 import numpy as np
 import math
 
