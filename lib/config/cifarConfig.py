@@ -7,6 +7,8 @@ class Cifar10Config(Config):
         self.GPU_NUM = 1
         self.BATCH_SIZE = 100
         self.IMAGE_SIZE = 32
+        self.TRAIN_RECORDS = 50000
+        self.TEST_RECORDS = 10000
         self.LABELS = ["airplane",
                        "automobile",
                        "bird",

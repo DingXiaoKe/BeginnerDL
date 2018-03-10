@@ -1,13 +1,16 @@
 from keras.layers import Input, Conv2D, MaxPooling2D, BatchNormalization,Activation,\
     Flatten,Dense,Dropout,GlobalAveragePooling2D,AveragePooling2D,ZeroPadding2D,Concatenate, \
     Reshape
+from keras.applications import VGG19, ResNet50, DenseNet121
+
 from keras.models import Model
 from lib.config.cifarConfig import Cifar10Config
 import numpy as np
 
 class AlexNet(object):
-    def __init__(self, config=Cifar10Config()):
+    def __init__(self, config=Cifar10Config(), zoom=1):
         self.cfg = config
+        self.zoom = zoom
 
     def network(self):
         image_input = Input(shape=(self.cfg.IMAGE_SIZE, self.cfg.IMAGE_SIZE, self.cfg.IMAGE_CHANNEL))
@@ -51,8 +54,9 @@ class AlexNet(object):
         return model
 
 class SENet(object):
-    def __init__(self, cfg = Cifar10Config()):
-        self.cfg = cfg
+    def __init__(self, config=Cifar10Config(), zoom=1):
+        self.cfg = config
+        self.zoom = zoom
 
     def network(self):
         image_input = Input(shape=(self.cfg.IMAGE_SIZE, self.cfg.IMAGE_SIZE, self.cfg.IMAGE_CHANNEL))
@@ -130,3 +134,32 @@ class SENet(object):
         x = Activation('relu')(x)
 
         return x
+
+class Vgg19(object):
+    def __init__(self,config=Cifar10Config(), zoom=2):
+        self.cfg = config
+        self.zoom = zoom
+
+    def network(self):
+        return VGG19(include_top=True, weights=None,
+                     input_shape=(self.cfg.IMAGE_SIZE * self.zoom,self.cfg.IMAGE_SIZE * self.zoom, self.cfg.IMAGE_CHANNEL),
+                     classes=self.cfg.NUM_OUTPUTS)
+
+class ResNet(object):
+    def __init__(self,config=Cifar10Config(), zoom=2):
+        self.cfg = config
+        self.zoom = zoom
+
+    def network(self):
+        return ResNet50(include_top=True, weights=None,
+                        input_shape=(self.cfg.IMAGE_SIZE * self.zoom, self.cfg.IMAGE_SIZE * self.zoom, self.cfg.IMAGE_CHANNEL),
+                        classes=self.cfg.NUM_OUTPUTS)
+class DenseNet(object):
+    def __init__(self,config=Cifar10Config(), zoom=1):
+        self.cfg = config
+        self.zoom = zoom
+
+    def network(self):
+        return DenseNet121(include_top=True, weights=None,
+                        input_shape=(self.cfg.IMAGE_SIZE * self.zoom, self.cfg.IMAGE_SIZE * self.zoom, self.cfg.IMAGE_CHANNEL),
+                        classes=self.cfg.NUM_OUTPUTS)

@@ -5,7 +5,7 @@ class MNISTConfig(Config):
         super(MNISTConfig, self).__init__()
         self.NUM_OUTPUTS = 10
         self.GPU_NUM = 1
-        self.BATCH_SIZE = 32
+        self.BATCH_SIZE = 100
         self.IMAGE_SIZE = 28
         self.IMAGE_CHANNEL = 1
         self.DATAPATH = "../data/mnist.npz"
