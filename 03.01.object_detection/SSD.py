@@ -7,8 +7,8 @@ from keras_losses.SSD import MultiboxLoss
 import pickle
 from keras_datareaders.ssd_voc_reader import XML_preprocessor
 from keras_generators.SSD_Generator import Generator
-from keras.callbacks import TensorBoard,ModelCheckpoint,EarlyStopping
-from keras_callbacks.ProgressBarCallback import ProgressBarCallback
+from keras.callbacks import EarlyStopping
+from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
 config = SSDConfig()
 
 def SSD300v2(input_shape):

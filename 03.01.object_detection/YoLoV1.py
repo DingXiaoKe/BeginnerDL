@@ -9,10 +9,9 @@ from keras.models import Model
 from keras_losses.yolov1 import loss_layer
 from keras.optimizers import SGD
 from keras_datareaders.yolov1_voc_reader import pascal_voc
-from keras_callbacks.ProgressBarCallback import ProgressBarCallback
+from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
 from keras_config.yoloV1Config import YoloV1Config
 from keras.preprocessing.image import ImageDataGenerator
-from keras.callbacks import ModelCheckpoint
 
 cfg = YoloV1Config()
 

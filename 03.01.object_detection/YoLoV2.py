@@ -8,7 +8,7 @@ from keras.models import Model
 from keras_losses.yolov2 import loss_function
 from keras.optimizers import SGD
 from keras_datareaders.yolov2_voc_reader import data_generator
-from keras_callbacks.ProgressBarCallback import ProgressBarCallback
+from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
 from keras_config.yoloV2Config import YoloV2Config
 from keras.preprocessing.image import ImageDataGenerator
 cfg = YoloV2Config()

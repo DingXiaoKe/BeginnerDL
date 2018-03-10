@@ -13,6 +13,7 @@ from keras_commons.roi_helpers import rpn_to_roi, calc_iou
 import numpy as np
 import random
 import time
+
 def baseNetwork(imageInput):
     bn_axis = 3
     network = ZeroPadding2D((3,3))(imageInput)

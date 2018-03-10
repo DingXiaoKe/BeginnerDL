@@ -1,11 +1,8 @@
 import keras
 import tensorflow as tf
-from keras_callbacks.ProgressBarCallback import ProgressBarCallback
+from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
 from keras.preprocessing.image import ImageDataGenerator
-from keras_datareaders.ClassificationReader import ClassificationReader
 from keras.utils import multi_gpu_model
-from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler
-import math
 from keras_layers.retinanet import ResNet50RetinaNet
 from keras_losses.retinanet import smooth_l1,focal
 from keras_generators.pascal_voc import PascalVocGenerator
