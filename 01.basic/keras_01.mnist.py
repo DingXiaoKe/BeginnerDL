@@ -1,6 +1,6 @@
 import os
 import keras.utils as np_utils
-from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
+from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
 import numpy as np
 from keras.layers import Conv2D, BatchNormalization,MaxPooling2D, Dense, Dropout, Flatten
 from keras.models import Sequential
@@ -51,7 +51,7 @@ model.add(Dropout(.5))
 model.add(Dense(units=10, activation="softmax"))
 
 #compile the model
-proBar = ProgressBarCallback()
+proBar = ProgressBar()
 model.compile(loss="categorical_crossentropy",
               optimizer='adam',
               metrics=['acc'])

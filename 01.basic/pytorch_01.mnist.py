@@ -8,11 +8,13 @@ from lib.datareader.pytorch.MNIST import MNISTDataSet
 from torch.optim import Adam
 from utils.progressbar.ProgressBar import ProgressBar
 from torch.nn import functional as F
+from lib.config.mnist import MNISTConfig
 
 torch.manual_seed(1)
-EPOCH = 1
-BATCH_SIZE = 50
+EPOCH = 5
 LR = 0.001
+
+cfg = MNISTConfig()
 
 class CNN(nn.Module):
     def __init__(self):
@@ -38,18 +40,10 @@ class CNN(nn.Module):
         x = x.view(x.size(0), -1)
         return self.out(x)
 
-# train_data = torchvision.datasets.MNIST(
-#     root='../data/MNIST',
-#            train=True,  # this is training data
-#                  transform=torchvision.transforms.ToTensor(),    # 转换 PIL.Image or numpy.ndarray 成
-#                            # torch.FloatTensor (C x H x W), 训练的时候 normalize 成 [0.0, 1.0] 区间
-#                            download=False,          # 没下载就下载, 下载了就不用再下了
-# )
-
 # print(train_data.train_data)
 train_data = MNISTDataSet(train=True, transform=torchvision.transforms.ToTensor())
 test_data  = MNISTDataSet(train=False)
-train_loader = data.DataLoader(dataset=train_data, batch_size=BATCH_SIZE,
+train_loader = data.DataLoader(dataset=train_data, batch_size=cfg.BATCH_SIZE,
                                shuffle=True)
 # test_x = Variable(torch.unsqueeze(test_data.test_data, dim=1), volatile=True).type(torch.FloatTensor)[:2000]/255.   # shape from (2000, 28, 28) to (2000, 1, 28, 28), value in range(0,1)
 # test_y = test_data.test_labels[:2000]
@@ -68,7 +62,7 @@ for epoch in range(EPOCH):
         loss.backward()
         optimizer.step()
 
-        prediction = torch.max(F.softmax(output), 1)[1]
+        prediction = torch.max(F.softmax(output, dim=1), 1)[1]
         pred_y = prediction.data.numpy().squeeze()
         target_y = b_y.data.numpy()
         accuracy = sum(pred_y == target_y) / len(target_y)
