@@ -1,7 +1,7 @@
 from keras.layers import Input, Conv2D, MaxPooling2D, BatchNormalization,Activation,\
     Flatten,Dense,Dropout,GlobalAveragePooling2D,AveragePooling2D,ZeroPadding2D,Concatenate, \
     Reshape
-from keras.applications import VGG19, ResNet50, DenseNet121
+from keras.applications import VGG19, ResNet50, DenseNet121,VGG16
 
 from keras.models import Model
 from lib.config.cifarConfig import Cifar10Config
@@ -134,6 +134,16 @@ class SENet(object):
         x = Activation('relu')(x)
 
         return x
+
+class Vgg16(object):
+    def __init__(self,config=Cifar10Config(), zoom=2):
+        self.cfg = config
+        self.zoom = zoom
+
+    def network(self):
+        return VGG16(include_top=True, weights=None,
+                     input_shape=(self.cfg.IMAGE_SIZE * self.zoom,self.cfg.IMAGE_SIZE * self.zoom, self.cfg.IMAGE_CHANNEL),
+                     classes=self.cfg.NUM_OUTPUTS)
 
 class Vgg19(object):
     def __init__(self,config=Cifar10Config(), zoom=2):

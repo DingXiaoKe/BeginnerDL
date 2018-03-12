@@ -5,7 +5,7 @@ import threading
 import keras
 import numpy as np
 
-from keras_commons.image import read_image_bgr
+from utils.utils.image import read_image_bgr
 
 cifar10_classes = {
     'airplane' : 0,

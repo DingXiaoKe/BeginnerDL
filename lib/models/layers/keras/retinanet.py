@@ -2,7 +2,7 @@ import keras
 import numpy as np
 import tensorflow as tf
 import math
-from keras_losses.retinanet import smooth_l1,focal
+from models.losses.keras.retinanet import smooth_l1,focal
 parameters = {
     "kernel_initializer": "he_normal"
 }
@@ -308,7 +308,7 @@ def ResNet50RetinaNet(inputs, num_classes, weights='imagenet', *args, **kwargs):
     weights_path = weights
     resnet = ResNet50(image, include_top=False, freeze_bn=True)
     model = retinanet_bbox(inputs=inputs, num_classes=num_classes, backbone=resnet, *args, **kwargs)
-    model.load_weights(weights_path, by_name=True)
+    # model.load_weights(weights_path, by_name=True)
     return model
 
 def ResNet50(inputs, blocks=None, include_top=True, classes=1000, *args, **kwargs):

@@ -1,37 +1,20 @@
-"""
-Copyright 2017-2018 Fizyr (https://fizyr.com)
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 import random
 import threading
 import time
 import warnings
-
-import keras
 import numpy as np
 
-from keras_commons.anchors import anchor_targets_bbox
-from keras_commons.image import preprocess_image, resize_image, random_transform
+import keras
 
+from lib.utils.utils.anchors import anchor_targets_bbox
+from lib.utils.utils.image import preprocess_image, resize_image, random_transform
 
 class Generator(object):
     def __init__(
         self,
         image_data_generator,
         batch_size=1,
-        group_method='ratio',  # one of 'none', 'random', 'ratio'
+        group_method='ratio',
         shuffle_groups=True,
         image_min_side=600,
         image_max_side=1024,

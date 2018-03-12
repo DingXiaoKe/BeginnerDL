@@ -9,6 +9,9 @@ def read_mnist(path='../data/mnist.npz'):
     f.close()
     return (x_train, y_train), (x_test, y_test)
 
-def read_image_bgr(path):
-    image = np.asarray(Image.open(path).convert('RGB'))
+def read_image_bgr(path, width, height):
+    image = Image.open(path).convert('RGB')
+    image = image.resize((width, height), Image.ANTIALIAS)
+    image = np.asarray(image)
+
     return image[:, :, ::-1].copy()

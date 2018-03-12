@@ -20,8 +20,8 @@ import numpy as np
 from PIL import Image
 from six import raise_from
 
-from keras_commons.image import read_image_bgr
-from keras_generators.generator import Generator
+from utils.utils.image import read_image_bgr
+from datareader.keras.generator import Generator
 
 try:
     import xml.etree.cElementTree as ET

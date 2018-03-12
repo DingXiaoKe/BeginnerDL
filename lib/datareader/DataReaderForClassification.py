@@ -29,7 +29,7 @@ class DataReader(object):
         reLabelList = np.zeros(shape=(total_count, 1), dtype=np.int32)
         for index, image in enumerate(imagelist):
             label = labellist[index]
-            imageData = read_image_bgr(os.path.join(self.dataPath, phrase, label, image))
+            imageData = read_image_bgr(os.path.join(self.dataPath, phrase, label, image), image_shape[0], image_shape[1])
             imageData = imageData.astype(np.uint8)
             reImageList[index] = imageData
             reLabelList[index] = label
