@@ -10,7 +10,7 @@ from torch.nn.functional import softmax
 import torchvision.datasets.cifar
 from lib.utils.progressbar.ProgressBar import ProgressBar
 
-from lib.models.pytorch.cifar import SENet
+from models.layers.pytorch.cifar import SENet
 
 EPOCH = 20
 BATCH_SIZE = 100

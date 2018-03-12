@@ -1,6 +1,7 @@
 import tensorflow as tf
 import math
 import scipy
+import cv2
 
 import keras.backend as K
 from keras.utils import multi_gpu_model
@@ -8,21 +9,25 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateSchedule
 from keras.optimizers import SGD
 from keras.losses import categorical_crossentropy
 from keras.utils import to_categorical
-
 from keras.preprocessing.image import ImageDataGenerator
+from keras.utils.vis_utils import plot_model
 
 from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
 from lib.datareader.DataReaderForClassification import DataReader
 from lib.config.cifarConfig import Cifar10Config
-from lib.models.keras.cifar import AlexNet,Vgg19,SENet,DenseNet,ResNet
+from models.layers.keras.cifar import AlexNet,Vgg19,SENet,DenseNet,ResNet,Vgg16
 
 cfg = Cifar10Config()
-MODEL = "alexnet"
+MODEL = "Vgg16"
 
 MODEL_LIST = [
     {
         "name" : "alexnet",
         "model" : AlexNet(cfg)
+    },
+    {
+        "name" : "Vgg16",
+        "model" : Vgg16(cfg, zoom=2)
     },
     {
         "name" : "Vgg19",
@@ -56,13 +61,12 @@ session = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 K.set_session(session)
 model = MODEL_LIST["name"==MODEL]["model"]
 zoom = model.zoom
-print(zoom)
 model = model.network()
 
 if GPU_NUM >= 2:
     model = multi_gpu_model(model, gpus=GPU_NUM)
 
-
+plot_model(model, to_file="%s.png" % MODEL, show_shapes=True, show_layer_names=True)
 model.compile(loss=categorical_crossentropy,
               optimizer=SGD(lr=0.0, momentum=0.9, nesterov=True),
               metrics=['acc'])
@@ -82,9 +86,9 @@ checkpoint = ModelCheckpoint(filepath="cifar10_{%s}.h5" % MODEL, save_best_only=
 lrate = LearningRateScheduler(lr_schedule)
 
 reader = DataReader()
-x_test, y_test = reader.readData(phrase="test")
+x_test, y_test = reader.readData(phrase="test", image_shape=(cfg.IMAGE_SIZE * zoom, cfg.IMAGE_SIZE * zoom, cfg.IMAGE_CHANNEL))
 y_test = to_categorical(y_test, num_classes=cfg.NUM_OUTPUTS)
-x_test = scipy.misc.imresize(x_test, cfg.IMAGE_SIZE * zoom, interp='cubic')
+
 
 model.fit_generator(generator=train_generator, steps_per_epoch=cfg.TRAIN_RECORDS/cfg.BATCH_SIZE,
                     epochs=EPOCH_NUM, verbose=0,
