@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from keras_generators.generator import Generator
-from keras_commons.image import read_image_bgr
+from datareader.keras.generator import Generator
+from utils.utils.image import read_image_bgr
 
 import os
 import numpy as np
@@ -79,7 +79,7 @@ class CocoGenerator(Generator):
 
     def load_image(self, image_index):
         image_info = self.coco.loadImgs(self.image_ids[image_index])[0]
-        path       = os.path.join(self.data_dir, 'images', self.set_name, image_info['file_name'])
+        path       = os.path.join(self.data_dir, self.set_name, image_info['file_name'])
         return read_image_bgr(path)
 
     def load_annotations(self, image_index):
