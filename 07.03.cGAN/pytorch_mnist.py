@@ -9,8 +9,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
-from datareader import pytorch as pyReader
-from keras_callbacks import ProgressBarCallback as bar
+from utils.progressbar.keras import ProgressBarCallback as bar
 
 # G(z)
 cuda = False

@@ -5,7 +5,8 @@ from keras import optimizers as KOpts
 import numpy as np
 from keras_datareaders import mnistReader as reader
 import pickle
-from keras_callbacks import ProgressBarCallback as bar
+from utils.progressbar.keras import ProgressBarCallback as bar
+
 
 def build_generator():
 
