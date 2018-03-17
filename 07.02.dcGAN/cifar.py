@@ -2,7 +2,7 @@ from keras import layers as KLayers
 from keras import models as KModels
 from keras import optimizers as KOpts
 from keras_datareaders import ClassificationReader as reader
-from keras_callbacks import ProgressBarCallback as bar
+from utils.progressbar.keras import ProgressBarCallback as bar
 import numpy as np
 import pickle
 from matplotlib import pyplot as plt

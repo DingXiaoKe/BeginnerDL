@@ -1,15 +1,13 @@
-from keras_config import mnist as config
+from config import mnist as config
 from keras_datareaders import mnistReader as reader
-from keras_callbacks import ProgressBarCallback as bar
+from utils.progressbar.keras import ProgressBarCallback as bar
 
 from keras import models as KModels
 from keras import layers as KLayers
-from keras import initializers as KInits
 from keras import optimizers as KOpts
 import numpy as np
 import pickle
 from matplotlib import pyplot as plt
-from keras import utils as kutils
 
 PHRASE = "TRAIN"
 
