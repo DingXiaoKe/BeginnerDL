@@ -2,7 +2,7 @@ import os
 import skimage.io
 
 from keras_config import FastMaskRCNNConfig as config
-from keras_models import segmentation as seg
+from models.layers.keras import segmentation as seg
 
 from keras_commons import visualize as visual
 

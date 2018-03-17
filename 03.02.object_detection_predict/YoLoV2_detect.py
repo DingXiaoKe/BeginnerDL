@@ -1,9 +1,9 @@
 from keras.models import load_model
-from keras_config.yoloV2Config import YoloV2Config
+from config.yoloV2Config import YoloV2Config
 import colorsys
 import random
 import keras.backend as K
-from keras_losses.yolov2 import convert_result
+from models.losses.keras.yolov2 import convert_result
 import tensorflow as tf
 import os
 from PIL import Image, ImageDraw, ImageFont

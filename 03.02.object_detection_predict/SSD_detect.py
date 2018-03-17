@@ -3,10 +3,10 @@ from scipy.misc import imread
 from keras.applications.imagenet_utils import preprocess_input
 import numpy as np
 from keras.models import load_model
-from keras_layers.SSD import PriorBox,Normalize, BBoxUtility
+from models.layers.keras.SSD import PriorBox,Normalize, BBoxUtility
 import pickle
 import matplotlib.pyplot as plt
-from keras_config.SSDConfig import SSDConfig
+from config.SSDConfig import SSDConfig
 cfg = SSDConfig()
 
 custom_objects = {
