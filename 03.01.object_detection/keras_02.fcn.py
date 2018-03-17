@@ -1,14 +1,17 @@
-from keras_config.FCNConfig import FCNConfig
-from keras.utils import multi_gpu_model
 import tensorflow as tf
 import keras.backend as K
-from keras.optimizers import SGD
-from keras_losses.fcn import softmax_sparse_crossentropy_ignoring_last_label, sparse_accuracy_ignoring_last_label
-from keras.callbacks import LearningRateScheduler
-from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
-from keras_generators.fcn_generator import SegDataGenerator
 import numpy as np
-from keras_models.segmentation import FCN_Resnet50_16s
+
+from keras.utils import multi_gpu_model
+from keras.optimizers import SGD
+from keras.callbacks import LearningRateScheduler
+
+from lib.config.FCNConfig import FCNConfig
+from lib.models.losses.keras.fcn import softmax_sparse_crossentropy_ignoring_last_label, sparse_accuracy_ignoring_last_label
+from lib.datareader.keras.fcn_generator import SegDataGenerator
+from lib.models.layers.keras.FCN import FCN_Resnet50_16s
+from lib.utils.progressbar.ProgressBar import ProgressBar
+
 cfg = FCNConfig()
 
 def lr_scheduler(epoch, mode='power_decay'):
@@ -67,7 +70,7 @@ train_datagen = SegDataGenerator(zoom_range=[0.5, 2.0],
 val_datagen = SegDataGenerator()
 steps_per_epoch = int(np.ceil(get_file_len(cfg.TRAIN_FILE_PATH) / float(cfg.BATCH_SIZE)))
 
-probar = ProgressBarCallback()
+probar = ProgressBar()
 model.fit_generator(generator=train_datagen.flow_from_directory(
                         file_path=cfg.TRAIN_FILE_PATH,
                         data_dir=cfg.DATA_DIR,

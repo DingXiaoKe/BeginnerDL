@@ -1,14 +1,17 @@
-from keras_config.SSDConfig import SSDConfig
-from keras.layers import Input, Conv2D, MaxPooling2D,GlobalAveragePooling2D,ZeroPadding2D,Flatten,Dense,Reshape, concatenate,Activation
-from keras_layers.SSD import PriorBox, Normalize,BBoxUtility
-from keras.models import Model
-import keras.backend as K
-from keras_losses.SSD import MultiboxLoss
 import pickle
-from keras_datareaders.ssd_voc_reader import XML_preprocessor
-from keras_generators.SSD_Generator import Generator
+import keras.backend as K
+from keras.models import Model
+from keras.layers import Input, Conv2D, MaxPooling2D,GlobalAveragePooling2D,ZeroPadding2D,Flatten,Dense,Reshape, concatenate,Activation
 from keras.callbacks import EarlyStopping
-from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
+
+from models.losses.keras.SSD import MultiboxLoss
+from config.SSDConfig import SSDConfig
+from models.layers.keras.SSD import PriorBox, Normalize,BBoxUtility
+
+from datareader.keras.ssd_voc_reader import XML_preprocessor
+from datareader.keras.SSD_Generator import Generator
+
+from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
 config = SSDConfig()
 
 def SSD300v2(input_shape):
@@ -274,7 +277,7 @@ EPOCHS = config.EPOCH_NUM
 # tensorboard = TensorBoard(log_dir=LOG_DIR, write_images=True)
 # checkpoint = ModelCheckpoint(filepath=LOG_FILE_PATH, monitor='val_loss', verbose=1, save_best_only=True)
 early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1)
-probar = ProgressBarCallback()
+probar = ProgressBar()
 history = model.fit_generator(generator=gen.generate(True), steps_per_epoch=int(gen.train_batches / 4),
                               validation_data=gen.generate(False), validation_steps=int(gen.val_batches / 4),
                               epochs=EPOCHS, verbose=0, callbacks=[early_stopping,probar])

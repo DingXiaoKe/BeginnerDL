@@ -2,7 +2,7 @@ from keras_config import FastMaskRCNNConfig as config
 import os
 from keras_datareaders.FastMaskRCNN import CocoDataset
 import numpy as np
-from keras_models import segmentation as seg
+from models.layers.keras import segmentation as seg
 from keras_commons import fastmaskrcnn as utils
 import time
 from pycocotools.cocoeval import COCOeval

@@ -7,11 +7,11 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.regularizers import l2
 from keras.utils import multi_gpu_model
 from keras.models import Model
-from keras_losses.yolov1 import loss_layer
 from keras.optimizers import SGD
-from keras_datareaders.yolov1_voc_reader import pascal_voc
 from keras.preprocessing.image import ImageDataGenerator
 
+from lib.datareader.keras.yolov1_voc_reader import pascal_voc
+from lib.models.losses.keras.yolov1 import loss_layer
 from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
 from lib.config.yoloV1Config import YoloV1Config
 

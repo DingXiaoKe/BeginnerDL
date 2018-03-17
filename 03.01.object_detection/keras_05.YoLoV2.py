@@ -1,16 +1,19 @@
+import tensorflow as tf
+import keras.backend as K
+
 from keras.layers import Input, Conv2D, BatchNormalization, MaxPooling2D, Lambda, Concatenate
 from keras.layers.advanced_activations import LeakyReLU
 from keras.regularizers import l2
-import keras.backend as K
 from keras.utils import multi_gpu_model
-import tensorflow as tf
 from keras.models import Model
-from keras_losses.yolov2 import loss_function
 from keras.optimizers import SGD
-from keras_datareaders.yolov2_voc_reader import data_generator
-from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
-from keras_config.yoloV2Config import YoloV2Config
 from keras.preprocessing.image import ImageDataGenerator
+
+from lib.datareader.keras.yolov2_voc_reader import data_generator
+from lib.config.yoloV2Config import YoloV2Config
+from lib.models.losses.keras.yolov2 import loss_function
+from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
+
 cfg = YoloV2Config()
 
 def model_out(images):
@@ -141,7 +144,7 @@ train_image_data_generator = ImageDataGenerator(
 
 reader = data_generator("../data/VOC2007/train.txt",
                         batch_size=cfg.BATCH_SIZE, target_image_size=(cfg.IMAGE_SIZE, cfg.IMAGE_SIZE))
-probar = ProgressBarCallback()
+probar = ProgressBar()
 model.fit_generator(generator=reader,steps_per_epoch=5011/cfg.BATCH_SIZE,
                     epochs=cfg.EPOCH_NUM, verbose=0,callbacks=[probar])
 
