@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from keras_config.yoloV1Config import YoloV1Config
+from config.yoloV1Config import YoloV1Config
 
 def loss_layer(y_true, y_pred):
 
