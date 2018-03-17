@@ -7,7 +7,7 @@ from keras_commons import sampler as sampler
 from keras_commons import visualize as visualizer
 import torch.nn.functional as F
 from torch import optim as tOpt
-from keras_callbacks import ProgressBarCallback as bar
+from utils.progressbar.keras import ProgressBarCallback as bar
 import imageio
 
 PHRASE = "TRAIN"

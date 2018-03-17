@@ -5,11 +5,9 @@ from keras import layers as KLayers
 from keras import models as KModels
 from keras import optimizers as KOpts
 import numpy as np
-from keras import losses as KLosses
-from keras_callbacks import ProgressBarCallback as bar
+from utils.progressbar.keras import ProgressBarCallback as bar
 import os
 import torch
-import math
 from keras import backend as K
 
 # Iteration 0: D_loss(real/fake): 0.666903/0.714351 G_loss: 0.673248
