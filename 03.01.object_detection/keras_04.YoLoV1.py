@@ -1,17 +1,19 @@
+import tensorflow as tf
+import math
+import keras.backend as K
+
 from keras.layers import ZeroPadding2D, Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input, Lambda
 from keras.layers.advanced_activations import LeakyReLU
 from keras.regularizers import l2
-import keras.backend as K
 from keras.utils import multi_gpu_model
-import tensorflow as tf
-import math
 from keras.models import Model
 from keras_losses.yolov1 import loss_layer
 from keras.optimizers import SGD
 from keras_datareaders.yolov1_voc_reader import pascal_voc
-from utils.progressbar.keras.ProgressBarCallback import ProgressBarCallback
-from keras_config.yoloV1Config import YoloV1Config
 from keras.preprocessing.image import ImageDataGenerator
+
+from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
+from lib.config.yoloV1Config import YoloV1Config
 
 cfg = YoloV1Config()
 
@@ -98,7 +100,6 @@ def lr_schedule(epoch):
     lrate = initial_lrate * math.pow(drop,math.floor((1+epoch)/epochs_drop))
     return lrate
 
-
 session = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
 K.set_session(session)
 image_input = Input(shape=(cfg.IMAGE_SIZE,cfg.IMAGE_SIZE,cfg.IMAGE_CHANNEL))
@@ -116,7 +117,7 @@ train_image_data_generator = ImageDataGenerator(
 
 reader = pascal_voc(cfg.BATCH_SIZE,train_image_data_generator, cfg.DATAPATH)
 reader.prepare(model="train")
-probar = ProgressBarCallback()
+probar = ProgressBar()
 model.fit_generator(generator=reader,steps_per_epoch=5011/cfg.BATCH_SIZE,
                     epochs=cfg.EPOCH_NUM, verbose=0,callbacks=[probar])
 model.save_weights("yolo_v1.h5")
