@@ -1,15 +1,19 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import pickle
+
 from keras.layers import Input, Dense, Reshape, Flatten
 from keras.layers import BatchNormalization
 from keras.layers.advanced_activations import LeakyReLU
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
-import matplotlib.pyplot as plt
-import numpy as np
-from keras_config import mnist as config
-from keras_datareaders import mnistReader as reader
-import pickle
-from keras_callbacks import ProgressBarCallback as bar
-cfg = config.MNISTConfig()
+
+from lib.config.mnist import MNISTConfig
+from lib.datareader.common import read_mnist
+
+from lib.utils.progressbar.ProgressBar import ProgressBar
+
+cfg = MNISTConfig()
 
 def build_discriminator():
     model = Sequential()
@@ -97,14 +101,14 @@ adversarial_autoencoder.compile(loss=['mse', 'binary_crossentropy'],
                                      loss_weights=[0.999, 0.001],
                                      optimizer=optimizer)
 
-(x_train, y_train), (x_test, y_test) = reader.read_mnist('../data/mnist.npz')
+(x_train, y_train), (x_test, y_test) = read_mnist('../data/mnist.npz')
 x_train = (x_train.astype(np.float32) - 127.5) / 127.5
 x_train = np.expand_dims(x_train, axis=3)
 
 half_batch = int(cfg.BATCH_SIZE / 2)
 
 samples_image = []
-progressBar = bar.ProgressBarGAN(1, cfg.EPOCH_NUM, "D loss: %.3f, acc: %.2f%% - G loss: %.3f, mse: %.2f")
+progressBar = ProgressBar(1, cfg.EPOCH_NUM, "D loss: %.3f, acc: %.2f%% - G loss: %.3f, mse: %.2f")
 for epoch in range(cfg.EPOCH_NUM):
     # Select a random half batch of images
     idx = np.random.randint(0, x_train.shape[0], half_batch)

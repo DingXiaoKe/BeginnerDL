@@ -1,54 +1,55 @@
-from keras_config import mnist as config
-from keras_datareaders import mnistReader as reader
-from keras_callbacks import ProgressBarCallback as bar
-
-from keras import models as KModels
-from keras import layers as KLayers
-from keras import initializers as KInits
-from keras import optimizers as KOpts
 import numpy as np
 import pickle
 from matplotlib import pyplot as plt
 
+from keras.models import Model, Sequential
+from keras.layers import Dense, LeakyReLU, Dropout, Input
+from keras import initializers as KInits
+from keras import optimizers as KOpts
+
+from lib.config.mnist import MNISTConfig
+from lib.datareader.common import read_mnist
+from lib.utils.progressbar.keras.ProgressBarCallback import ProgressBar
+
 PHRASE = "TRAIN"
 
-cfg = config.MNISTConfig()
+cfg = MNISTConfig()
 
 if PHRASE == "TRAIN":
     np.random.seed(1000)
     randomDim = 100
-    (X_train, y_train), (X_test, y_test) = reader.read_mnist("../data/mnist.npz")
+    (X_train, y_train), (X_test, y_test) = read_mnist("../data/mnist.npz")
     X_train = (X_train.astype(np.float32) - 127.5)/127.5
     X_train = X_train.reshape(60000, 784)
 
     adam = KOpts.Adam(lr=0.0002, beta_1=0.5)
 
     def build_generator(randomDim):
-        model = KModels.Sequential()
-        model.add(KLayers.Dense(256, input_dim=randomDim, kernel_initializer=KInits.RandomNormal(stddev=0.02)))
-        model.add(KLayers.LeakyReLU(alpha=0.2))
-        model.add(KLayers.Dense(512))
-        model.add(KLayers.LeakyReLU(alpha=0.2))
-        model.add(KLayers.Dense(1024))
-        model.add(KLayers.LeakyReLU(alpha=0.2))
-        model.add(KLayers.Dense(784, activation="tanh"))
+        model = Sequential()
+        model.add(Dense(256, input_dim=randomDim, kernel_initializer=KInits.RandomNormal(stddev=0.02)))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dense(512))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dense(1024))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dense(784, activation="tanh"))
         model.compile(loss="binary_crossentropy", optimizer=adam)
 
         return model
 
     def build_discriminator():
-        model = KModels.Sequential()
+        model = Sequential()
 
-        model.add(KLayers.Dense(1024, input_dim=784, kernel_initializer=KInits.RandomNormal(stddev=0.02)))
-        model.add(KLayers.LeakyReLU(0.2))
-        model.add(KLayers.Dropout(0.3))
-        model.add(KLayers.Dense(512))
-        model.add(KLayers.LeakyReLU(0.2))
-        model.add(KLayers.Dropout(0.3))
-        model.add(KLayers.Dense(256))
-        model.add(KLayers.LeakyReLU(0.2))
-        model.add(KLayers.Dropout(0.3))
-        model.add(KLayers.Dense(1, activation='sigmoid'))
+        model.add(Dense(1024, input_dim=784, kernel_initializer=KInits.RandomNormal(stddev=0.02)))
+        model.add(LeakyReLU(0.2))
+        model.add(Dropout(0.3))
+        model.add(Dense(512))
+        model.add(LeakyReLU(0.2))
+        model.add(Dropout(0.3))
+        model.add(Dense(256))
+        model.add(LeakyReLU(0.2))
+        model.add(Dropout(0.3))
+        model.add(Dense(1, activation='sigmoid'))
         model.compile(loss='binary_crossentropy', optimizer=adam)
 
         return model
@@ -56,11 +57,11 @@ if PHRASE == "TRAIN":
     discriminator = build_discriminator()
     discriminator.trainable = False
 
-    ganInput = KLayers.Input(shape=(randomDim,))
+    ganInput = Input(shape=(randomDim,))
     generator = build_generator(randomDim)
     x = generator(ganInput)
     ganOutput = discriminator(x)
-    gan = KModels.Model(inputs=ganInput, outputs=ganOutput)
+    gan = Model(inputs=ganInput, outputs=ganOutput)
     gan.compile(loss='binary_crossentropy', optimizer=adam)
 
     dLosses = []
@@ -72,7 +73,7 @@ if PHRASE == "TRAIN":
     print('Epochs:', epochs)
     print('Batch size:', batchSize)
     print('Batches per epoch:', batchCount)
-    progBar = bar.ProgressBarGAN(epochs, batchCount, "D Loss:%.3f,G Loss:%.3f")
+    progBar = ProgressBar(epochs, batchCount, "D Loss:%.3f,G Loss:%.3f")
     samples_image = []
     for e in range(1, (epochs+1)):
         # Get a random set of input noise and images
