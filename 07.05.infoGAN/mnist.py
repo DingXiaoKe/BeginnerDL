@@ -5,7 +5,7 @@ from keras import backend as K
 from keras_datareaders import mnistReader as reader
 import numpy as np
 from keras import utils as KUtils
-from keras_callbacks import ProgressBarCallback as bar
+from utils.progressbar.keras import ProgressBarCallback as bar
 from matplotlib import pyplot as plt
 
 PHRASE = "TRAIN"
