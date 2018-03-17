@@ -11,7 +11,6 @@ from lib.models.layers.keras.retinanet import ResNet50RetinaNet
 from lib.models.losses.keras.retinanet import smooth_l1,focal
 from lib.datareader.keras.pascal_voc import PascalVocGenerator
 
-
 def newModel(image_input):
     return ResNet50RetinaNet(image_input, num_classes=20)
 
@@ -25,7 +24,7 @@ model = newModel(image_input)
 if GPU_NUM >= 2:
     model = multi_gpu_model(model, gpus=GPU_NUM)
 
-plot_model(model,to_file='RetinaNet.png',show_shapes=True,show_layer_names=True)
+# plot_model(model,to_file='RetinaNet.png',show_shapes=True,show_layer_names=True)
 model.compile(
     loss={
         'regression'    : smooth_l1(),

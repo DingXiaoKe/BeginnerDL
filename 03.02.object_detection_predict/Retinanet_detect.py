@@ -1,11 +1,9 @@
-import keras
 import keras.preprocessing.image
-from keras_layers.retinanet import custom_objects
+from models.layers.keras.retinanet import custom_objects
 from keras_generators.coco import CocoGenerator
 
 import matplotlib.pyplot as plt
 import cv2
-import os
 import numpy as np
 import time
 
@@ -18,7 +16,7 @@ def get_session():
 
 keras.backend.tensorflow_backend.set_session(get_session())
 
-model = keras.models.load_model('../weights/resnet50_coco_best.h5', custom_objects=custom_objects)
+model = keras.models.load_model('../weights/retina_resnet50_coco_best.h5', custom_objects=custom_objects)
 print(model.summary())
 
 # create image data generator object
