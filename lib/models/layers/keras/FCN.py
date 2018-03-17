@@ -2,8 +2,7 @@ from keras.layers import Input,Conv2D,BatchNormalization,Activation,MaxPooling2D
 from keras.models import Model
 from keras_layers.fcn import conv_block,identity_block,atrous_identity_block,atrous_conv_block,BilinearUpSampling2D
 from keras.regularizers import l2
-from keras_config.FCNConfig import FCNConfig
-import keras.backend as K
+from config.FCNConfig import FCNConfig
 from keras_layers.FastMaskRCNN import *
 from keras_commons import fastmaskrcnn as utils
 from keras import models as KM

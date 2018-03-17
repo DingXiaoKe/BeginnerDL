@@ -1,6 +1,6 @@
 from keras.layers import Conv2D, BatchNormalization, Activation, Add
 from keras.regularizers import l2
-from keras_config.FCNConfig import FCNConfig
+from config.FCNConfig import FCNConfig
 from keras.engine.topology import Layer,InputSpec
 import keras.backend as K
 import tensorflow as tf

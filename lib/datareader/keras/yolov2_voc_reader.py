@@ -1,6 +1,6 @@
 from PIL import Image
 import numpy as np
-from keras_config.yoloV2Config import YoloV2Config
+from config.yoloV2Config import YoloV2Config
 cfg = YoloV2Config()
 
 

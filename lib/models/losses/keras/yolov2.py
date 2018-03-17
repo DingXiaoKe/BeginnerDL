@@ -1,7 +1,6 @@
 import tensorflow as tf
-import numpy as np
 import keras.backend as K
-from keras_config.yoloV2Config import YoloV2Config
+from config.yoloV2Config import YoloV2Config
 
 cfg = YoloV2Config()
 
