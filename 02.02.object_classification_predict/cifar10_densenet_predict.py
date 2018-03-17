@@ -1,5 +1,5 @@
-from keras_models.cifar import densenet
-from keras_config.cifar10Config import Cifar10Config
+from models.layers.keras.cifar import densenet
+from config.cifar10Config import Cifar10Config
 from keras.optimizers import Adam
 import os
 from keras_datareaders.ClassificationReader import ClassificationReader
