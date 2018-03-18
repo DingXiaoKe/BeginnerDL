@@ -3,7 +3,7 @@ from torch import nn
 from torch.autograd import Variable
 from torch.utils import data
 import torchvision
-from utils.progressbar.keras import ProgressBarCallback as bar
+from lib.utils.progressbar.ProgressBar import ProgressBar
 from lib.datareader.pytorch.MNIST import MNISTDataSet
 from torch.optim import Adam
 
@@ -47,7 +47,7 @@ loss_func = nn.MSELoss()
 
 train_data = MNISTDataSet(train=True, transform=torchvision.transforms.ToTensor())
 train_loader = data.DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
-proBar = bar.ProgressBarGAN(EPOCH, len(train_loader), "loss:%.3f")
+proBar = ProgressBar(EPOCH, len(train_loader), "loss:%.3f")
 
 for epoch in range(EPOCH):
     for step, (x,y) in enumerate(train_loader):
