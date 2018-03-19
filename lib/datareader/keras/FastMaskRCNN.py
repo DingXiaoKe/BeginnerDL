@@ -3,10 +3,9 @@ from skimage import io, color
 import cv2
 import math
 import random
-from keras_commons import fastmaskrcnn as utils
+from models.layers.keras import fastmaskrcnn as utils
 import logging
 from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval
 from pycocotools import mask as maskUtils
 import os
 import urllib

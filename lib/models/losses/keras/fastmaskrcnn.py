@@ -1,6 +1,7 @@
 import tensorflow as tf
 import keras.backend as K
-from keras_commons import fastmaskrcnn as utils
+from models.layers.keras import fastmaskrcnn as utils
+
 
 def rpn_class_loss_graph(rpn_match, rpn_class_logits):
     """RPN anchor classifier loss.
