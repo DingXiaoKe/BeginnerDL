@@ -107,15 +107,7 @@ for epoch in range(EPOCH):
         train_loss += loss.data[0]
         optimizer.step()
         proBar.show(loss.data[0] / len(img))
-        # if batch_idx % 100 == 0:
-        #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-        #         epoch,
-        #         batch_idx * len(img),
-        #         len(dataloader.dataset), 100. * batch_idx / len(dataloader),
-        #         loss.data[0] / len(img)))
 
-    # print('====> Epoch: {} Average loss: {:.4f}'.format(
-    #     epoch, train_loss / len(dataloader.dataset)))
     if epoch % 10 == 0:
         save = to_img(recon_batch.cpu().data)
         save_image(save, 'vae_img/image_{}.png'.format(epoch))
