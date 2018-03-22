@@ -1,4 +1,4 @@
-from config.Config import Config
+from lib.config.Config import Config
 
 class MNISTConfig(Config):
     def __init__(self):

@@ -5,7 +5,7 @@
 import os
 import numpy as np
 from lib.datareader.common import read_image_bgr
-
+from tqdm import tqdm
 class DataReader(object):
     def __init__(self, dataPath="../data/cifar10"):
         self.dataPath = dataPath
@@ -27,7 +27,10 @@ class DataReader(object):
 
         reImageList = np.zeros(shape=(total_count,) + image_shape, dtype=np.float32)
         reLabelList = np.zeros(shape=(total_count, 1), dtype=np.int32)
-        for index, image in enumerate(imagelist):
+        text = ""
+        pbar = tqdm(enumerate(imagelist))
+        for index, image in pbar:
+            pbar.set_description("loading images : %s" % (total_count - index - 1))
             label = labellist[index]
             imageData = read_image_bgr(os.path.join(self.dataPath, phrase, label, image), image_shape[0], image_shape[1])
             imageData = imageData.astype(np.uint8)

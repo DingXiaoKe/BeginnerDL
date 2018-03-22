@@ -17,7 +17,7 @@ import matplotlib.patches as patches
 import matplotlib.lines as lines
 from matplotlib.patches import Polygon
 import IPython.display
-from models.layers.keras import fastmaskrcnn as utils
+from lib.models.layers.keras import FastMaskRCNN as utils
 
 from itertools import cycle
 import numpy

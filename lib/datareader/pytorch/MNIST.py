@@ -1,5 +1,5 @@
 from torch.utils.data import Dataset
-from datareader import common as reader
+from lib.datareader import common as reader
 from PIL import Image
 
 class MNISTDataSet(Dataset):
