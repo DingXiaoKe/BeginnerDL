@@ -1,4 +1,5 @@
-from keras.layers import Input, Dense, LeakyReLU, Reshape,Conv2DTranspose, Conv2D,Flatten,Dropout
+from keras.layers import Input, Dense, LeakyReLU, Reshape,Conv2DTranspose, Conv2D,Flatten,Dropout,\
+    BatchNormalization, Activation
 from keras.models import Model,load_model
 from keras.optimizers import Adam,RMSprop
 from keras.utils import multi_gpu_model
@@ -50,15 +51,14 @@ def builder_discriminator():
     network = Dense(1, activation='sigmoid')(network)
 
     discriminator = Model(discriminator_input, network)
-    # discriminator.summary()
+
     return discriminator
-
-
 
 PHRASE = "TRAIN"
 GPU_NUM = 1
 batchSize = 100
 epochs = 60
+randomDim = 100
 if PHRASE == "TRAIN":
     # adam = Adam(lr=0.0002, beta_1=0.5)
     reader = DataReader()
@@ -69,9 +69,9 @@ if PHRASE == "TRAIN":
     discriminator.compile(optimizer=RMSprop(lr=0.0008, clipvalue=1.0, decay=1e-8), loss='binary_crossentropy')
     discriminator.trainable = False
 
-    generator = builder_generator(100)
+    generator = builder_generator(randomDim)
     # generator.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
-    ganInput = Input(shape=(100,))
+    ganInput = Input(shape=(randomDim,))
     ganOutput = discriminator(generator(ganInput))
     dcgan = Model(inputs=ganInput, outputs=ganOutput)
 
