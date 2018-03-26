@@ -32,7 +32,7 @@ from keras import backend as K
 # Iteration 1800: D_loss(real/fake): 0.704925/0.68092 G_loss: 0.685825
 # Iteration 1900: D_loss(real/fake): 0.677409/0.70847 G_loss: 0.706711
 
-GPU_NUMS = 2
+GPU_NUMS = 1
 
 def build_generator():
     img = KLayers.Input(shape=(2,))
@@ -63,7 +63,7 @@ def build_discriminator():
 DIMENSION = 2
 
 cuda = False
-bs = 3000
+bs = 4000
 z_dim = 2
 input_path = "inputs/Z.jpg"
 
@@ -83,9 +83,9 @@ gan = KModels.Model(inputs=ganInput, outputs=ganOutput)
 if GPU_NUMS > 1:
     gan = multi_gpu_model(gan,GPU_NUMS)
 gan.compile(loss='binary_crossentropy', optimizer=KOpts.RMSprop(lr=0.0008, clipvalue=1.0, decay=1e-8))
-progBar = ProgressBar(1, 2000, "D Loss:%.3f,G Loss:%.3f")
+progBar = ProgressBar(1, bs, "D Loss:%.3f,G Loss:%.3f")
 
-for epoch_iter in range(1, 2001):
+for epoch_iter in range(1, bs+1):
     for index in range(20):
         real_samples = sampler.sample_2d(lut_2d, bs)
         # print(real_samples.shape)
