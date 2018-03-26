@@ -1,12 +1,13 @@
 from skimage import io
-from keras_commons import sampler as sampler
-from keras_commons import visualize as visualizer
+from lib.models import sampler as sampler, visualize as visualizer
 from keras import layers as KLayers
 from keras import models as KModels
 from keras import optimizers as KOpts
 import numpy as np
-from utils.progressbar.keras import ProgressBarCallback as bar
+from lib.utils.progressbar.ProgressBar import ProgressBar
 import os
+import imageio
+from keras.utils import multi_gpu_model
 import torch
 from keras import backend as K
 
@@ -31,7 +32,7 @@ from keras import backend as K
 # Iteration 1800: D_loss(real/fake): 0.704925/0.68092 G_loss: 0.685825
 # Iteration 1900: D_loss(real/fake): 0.677409/0.70847 G_loss: 0.706711
 
-opt = KOpts.Adadelta(lr = 1)
+GPU_NUMS = 2
 
 def build_generator():
     img = KLayers.Input(shape=(2,))
@@ -41,7 +42,7 @@ def build_generator():
     network = KLayers.Activation("sigmoid")(network)
 
     model = KModels.Model(inputs=img, outputs=network)
-    model.compile(optimizer=opt, loss="binary_crossentropy")
+    # model.compile(optimizer=KOpts.RMSprop(lr=0.0008, clipvalue=1.0, decay=1e-8), loss="binary_crossentropy")
 
     return model
 
@@ -53,14 +54,16 @@ def build_discriminator():
     network = KLayers.Activation("sigmoid")(network)
 
     model = KModels.Model(inputs=img, outputs=network)
-    model.compile(optimizer=opt, loss="binary_crossentropy")
+    if GPU_NUMS > 1:
+        model = multi_gpu_model(model,GPU_NUMS)
+    model.compile(optimizer=KOpts.RMSprop(lr=0.0008, clipvalue=1.0, decay=1e-8), loss="binary_crossentropy")
 
     return model
 
 DIMENSION = 2
 
 cuda = False
-bs = 2000
+bs = 3000
 z_dim = 2
 input_path = "inputs/Z.jpg"
 
@@ -77,16 +80,18 @@ generator = build_generator()
 x = generator(ganInput)
 ganOutput = discriminator(x)
 gan = KModels.Model(inputs=ganInput, outputs=ganOutput)
-gan.compile(loss='binary_crossentropy', optimizer=opt)
-progBar = bar.ProgressBarGAN(1, 2000, "D Loss:%.3f,G Loss:%.3f")
+if GPU_NUMS > 1:
+    gan = multi_gpu_model(gan,GPU_NUMS)
+gan.compile(loss='binary_crossentropy', optimizer=KOpts.RMSprop(lr=0.0008, clipvalue=1.0, decay=1e-8))
+progBar = ProgressBar(1, 2000, "D Loss:%.3f,G Loss:%.3f")
 
 for epoch_iter in range(1, 2001):
     for index in range(20):
         real_samples = sampler.sample_2d(lut_2d, bs)
         # print(real_samples.shape)
 
-        noise = torch.randn(bs, z_dim) # np.random.normal(-1, 1, size=[bs, z_dim])
-        generateImage = generator.predict(noise.numpy())
+        noise = np.random.normal(-1, 1, size=[bs, z_dim])
+        generateImage = generator.predict(noise)
 
         discriminator.trainable = True
         yDis = np.zeros(2*bs)
@@ -94,16 +99,13 @@ for epoch_iter in range(1, 2001):
         d_loss = discriminator.train_on_batch(
             np.concatenate((real_samples, generateImage)), yDis)
     for index in range(1):
-        noise = torch.randn(bs, z_dim)#np.random.normal(-1, 1, size=[bs, z_dim])
-        generateImage = generator.predict(noise.numpy())
+        noise = np.random.normal(-1, 1, size=[bs, z_dim])
+        generateImage = generator.predict(noise)
         yGen = np.ones(bs)
         discriminator.trainable = False
         g_loss = gan.train_on_batch(noise, yGen)
 
     progBar.show(d_loss, g_loss)
-
-    if epoch_iter % 300 == 0:
-        K.set_value(opt.lr, 0.1 * K.get_value(opt.lr))
 
     if epoch_iter % 100 == 0:
 
@@ -119,3 +121,9 @@ for epoch_iter in range(1, 2001):
             os.system('mkdir -p {}'.format(output_dir))
             export_filepath = os.sep.join([output_dir, 'iter_{:0>6d}.png'.format(epoch_iter)])
             visualizer.savefig(export_filepath)
+
+filenames=sorted((os.path.join(output_dir, fn) for fn in os.listdir(output_dir) if fn.endswith('.png')))
+images = []
+for filename in filenames:
+    images.append(imageio.imread(filename))
+imageio.mimsave('{}.gif'.format(filename[:filename.rfind('.')]), images,duration=0.1)

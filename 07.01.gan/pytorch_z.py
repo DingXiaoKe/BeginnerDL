@@ -3,8 +3,7 @@ from skimage import io
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-from keras_commons import sampler as sampler
-from keras_commons import visualize as visualizer
+from models import sampler as sampler, visualize as visualizer
 import torch.nn.functional as F
 from torch import optim as tOpt
 from utils.progressbar.keras import ProgressBarCallback as bar
