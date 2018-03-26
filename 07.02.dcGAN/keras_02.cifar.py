@@ -15,25 +15,21 @@ config = Cifar10Config()
 
 def builder_generator(randomDim):
     generator_input = Input(shape=(randomDim,))
+
     network = Dense(128 * 16 * 16)(generator_input)
     network = LeakyReLU()(network)
     network = Reshape((16, 16, 128))(network)
-
     network = Conv2D(256, 5, padding='same')(network)
     network = LeakyReLU()(network)
-
     network = Conv2DTranspose(256, 4, strides=2, padding='same')(network)
     network = LeakyReLU()(network)
-
-    # Few more conv layers
     network = Conv2D(256, 5, padding='same')(network)
     network = LeakyReLU()(network)
     network = Conv2D(256, 5, padding='same')(network)
     network = LeakyReLU()(network)
-
     network = Conv2D(config.IMAGE_CHANNEL, 7, activation='tanh', padding='same')(network)
+
     generator = Model(generator_input, network)
-    # generator.summary()
     return generator
 
 def builder_discriminator():
@@ -62,7 +58,7 @@ randomDim = 100
 if PHRASE == "TRAIN":
     # adam = Adam(lr=0.0002, beta_1=0.5)
     reader = DataReader()
-    imageList, labelList = reader.readData()
+    imageList, labelList = reader.readData(subFolder="7")
 
     discriminator = builder_discriminator()
     # discriminator = multi_gpu_model(discriminator, GPU_NUM)
@@ -87,7 +83,6 @@ if PHRASE == "TRAIN":
 
     x_train = imageList
     y_train = labelList
-    x_train = imageList[y_train.flatten() == 7]
 
     x_train = x_train.reshape(
         (x_train.shape[0],) + (config.IMAGE_SIZE, config.IMAGE_SIZE, config.IMAGE_CHANNEL)).astype('float32') / 255.
