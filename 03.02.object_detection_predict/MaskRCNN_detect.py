@@ -1,10 +1,10 @@
 import os
 import skimage.io
 
-from keras_config import FastMaskRCNNConfig as config
+from config import FastMaskRCNNConfig as config
 from models.layers.keras import segmentation as seg
 
-from keras_commons import visualize as visual
+from models import visualize as visual
 
 # COCO Class names
 # Index of the class in the list is its ID. For example, to get ID of

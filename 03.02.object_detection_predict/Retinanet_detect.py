@@ -1,6 +1,6 @@
 import keras.preprocessing.image
 from models.layers.keras.retinanet import custom_objects
-from keras_generators.coco import CocoGenerator
+from datareader.keras.coco import CocoGenerator
 
 import matplotlib.pyplot as plt
 import cv2
