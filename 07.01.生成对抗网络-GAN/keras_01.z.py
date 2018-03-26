@@ -1,93 +1,67 @@
-from skimage import io
-from lib.models import sampler as sampler, visualize as visualizer
-from keras import layers as KLayers
-from keras import models as KModels
-from keras import optimizers as KOpts
-import numpy as np
-from lib.utils.progressbar.ProgressBar import ProgressBar
 import os
 import imageio
-from keras.utils import multi_gpu_model
-import torch
-from keras import backend as K
+import numpy as np
 
-# Iteration 0: D_loss(real/fake): 0.666903/0.714351 G_loss: 0.673248
-# Iteration 100: D_loss(real/fake): 0.644591/0.742094 G_loss: 0.73878
-# Iteration 200: D_loss(real/fake): 0.648646/0.735631 G_loss: 0.742899
-# Iteration 300: D_loss(real/fake): 0.650042/0.733398 G_loss: 0.741042
-# Iteration 400: D_loss(real/fake): 0.667946/0.715312 G_loss: 0.734752
-# Iteration 500: D_loss(real/fake): 0.653243/0.73298 G_loss: 0.738096
-# Iteration 600: D_loss(real/fake): 0.679417/0.70518 G_loss: 0.701225
-# Iteration 700: D_loss(real/fake): 0.685357/0.698812 G_loss: 0.693155
-# Iteration 800: D_loss(real/fake): 0.665757/0.71943 G_loss: 0.726154
-# Iteration 900: D_loss(real/fake): 0.677652/0.706955 G_loss: 0.705668
-# Iteration 1000: D_loss(real/fake): 0.666454/0.718688 G_loss: 0.721987
-# Iteration 1100: D_loss(real/fake): 0.677197/0.706994 G_loss: 0.717063
-# Iteration 1200: D_loss(real/fake): 0.686249/0.698309 G_loss: 0.697095
-# Iteration 1300: D_loss(real/fake): 0.716442/0.667566 G_loss: 0.674883
-# Iteration 1400: D_loss(real/fake): 0.669951/0.715769 G_loss: 0.714323
-# Iteration 1500: D_loss(real/fake): 0.70815/0.678253 G_loss: 0.672678
-# Iteration 1600: D_loss(real/fake): 0.694573/0.690822 G_loss: 0.699048
-# Iteration 1700: D_loss(real/fake): 0.687652/0.698034 G_loss: 0.698886
-# Iteration 1800: D_loss(real/fake): 0.704925/0.68092 G_loss: 0.685825
-# Iteration 1900: D_loss(real/fake): 0.677409/0.70847 G_loss: 0.706711
+from skimage.io import imread
+from keras.layers import Input, Dense, LeakyReLU, Activation
+from keras.models import Model
+from keras.optimizers import RMSprop
+from keras.utils import multi_gpu_model
+
+from lib.models.sampler import generate_lut,sample_2d
+from lib.models.visualize import GANDemoVisualizer
+from lib.utils.progressbar.ProgressBar import ProgressBar
 
 GPU_NUMS = 1
-
-def build_generator():
-    img = KLayers.Input(shape=(2,))
-    network = KLayers.Dense(50)(img)
-    network = KLayers.LeakyReLU(alpha=0.1)(network)
-    network = KLayers.Dense(2)(network)
-    network = KLayers.Activation("sigmoid")(network)
-
-    model = KModels.Model(inputs=img, outputs=network)
-    # model.compile(optimizer=KOpts.RMSprop(lr=0.0008, clipvalue=1.0, decay=1e-8), loss="binary_crossentropy")
-
-    return model
-
-def build_discriminator():
-    img = KLayers.Input(shape=(2,))
-    network = KLayers.Dense(50)(img)
-    network = KLayers.LeakyReLU(alpha=0.1)(network)
-    network = KLayers.Dense(1)(network)
-    network = KLayers.Activation("sigmoid")(network)
-
-    model = KModels.Model(inputs=img, outputs=network)
-    if GPU_NUMS > 1:
-        model = multi_gpu_model(model,GPU_NUMS)
-    model.compile(optimizer=KOpts.RMSprop(lr=0.0008, clipvalue=1.0, decay=1e-8), loss="binary_crossentropy")
-
-    return model
-
 DIMENSION = 2
-
+iterations = 3000
 cuda = False
-bs = 4000
+bs = 2000
 z_dim = 2
 input_path = "inputs/Z.jpg"
 
-density_img = io.imread(input_path, True)
-lut_2d = sampler.generate_lut(density_img)
-visualizer = visualizer.GANDemoVisualizer('GAN 2D Example Visualization of {}'.format(input_path))
+def build_generator():
+    img =     Input(shape=(2,))
+    network = Dense(50)(img)
+    network = LeakyReLU(alpha=0.1)(network)
+    network = Dense(2)(network)
+    network = Activation("sigmoid")(network)
+    model   = Model(inputs=img, outputs=network)
+    return model
+
+def build_discriminator():
+    img =     Input(shape=(2,))
+    network = Dense(50)(img)
+    network = LeakyReLU(alpha=0.1)(network)
+    network = Dense(1)(network)
+    network = Activation("sigmoid")(network)
+    model   = Model(inputs=img, outputs=network)
+    if GPU_NUMS > 1:
+        model = multi_gpu_model(model,GPU_NUMS)
+    model.compile(optimizer=RMSprop(lr=0.0008, clipvalue=1.0, decay=1e-8), loss="binary_crossentropy")
+    return model
+
+density_img = imread(input_path, True)
+lut_2d = generate_lut(density_img)
+visualizer = GANDemoVisualizer('GAN 2D Example Visualization of {}'.format(input_path))
 
 generator = build_generator()
 discriminator = build_discriminator()
 discriminator.trainable = False
 
-ganInput = KLayers.Input(shape=(z_dim,))
+ganInput = Input(shape=(z_dim,))
 generator = build_generator()
 x = generator(ganInput)
 ganOutput = discriminator(x)
-gan = KModels.Model(inputs=ganInput, outputs=ganOutput)
+gan = Model(inputs=ganInput, outputs=ganOutput)
 if GPU_NUMS > 1:
     gan = multi_gpu_model(gan,GPU_NUMS)
-gan.compile(loss='binary_crossentropy', optimizer=KOpts.RMSprop(lr=0.0008, clipvalue=1.0, decay=1e-8))
-progBar = ProgressBar(1, bs, "D Loss:%.3f,G Loss:%.3f")
+gan.compile(loss='binary_crossentropy', optimizer=RMSprop(lr=0.0008, clipvalue=1.0, decay=1e-8))
+progBar = ProgressBar(1, iterations, "D Loss:%.3f,G Loss:%.3f")
 
-for epoch_iter in range(1, bs+1):
+for epoch_iter in range(1, iterations+1):
     for index in range(20):
-        real_samples = sampler.sample_2d(lut_2d, bs)
+        real_samples = sample_2d(lut_2d, bs)
         # print(real_samples.shape)
 
         noise = np.random.normal(-1, 1, size=[bs, z_dim])

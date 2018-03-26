@@ -1,68 +1,70 @@
 import os
-from skimage import io
 import torch
-import torch.nn as nn
-from torch.autograd import Variable
-from models import sampler as sampler, visualize as visualizer
-import torch.nn.functional as F
-from torch import optim as tOpt
-from utils.progressbar.keras import ProgressBarCallback as bar
 import imageio
 
+from skimage.io import imread
+from torch.nn import Module, Linear, BCELoss
+from torch.autograd import Variable
+from torch.nn.functional import leaky_relu, sigmoid
+from torch.optim import Adadelta
+
+
+from lib.models.sampler import generate_lut,sample_2d
+from lib.models.visualize import GANDemoVisualizer
+from lib.utils.progressbar.ProgressBar import ProgressBar
+
 PHRASE = "TRAIN"
-
 DIMENSION = 2
-
 iterations = 3000
 cuda = False
 bs = 2000
 z_dim = 2
 input_path = "inputs/Z.jpg"
 
-density_img = io.imread(input_path, True)
-lut_2d = sampler.generate_lut(density_img)
+density_img = imread(input_path, True)
+lut_2d = generate_lut(density_img)
 
-visualizer = visualizer.GANDemoVisualizer('GAN 2D Example Visualization of {}'.format(input_path))
+visualizer = GANDemoVisualizer('GAN 2D Example Visualization of {}'.format(input_path))
 
 if PHRASE == "TRAIN":
-    class SimpleMLP(nn.Module):
+    class SimpleMLP(Module):
         def __init__(self, input_size, hidden_size, output_size):
             super(SimpleMLP, self).__init__()
-            self.map1 = nn.Linear(input_size, hidden_size)
-            self.map2 = nn.Linear(hidden_size, output_size)
+            self.map1 = Linear(input_size, hidden_size)
+            self.map2 = Linear(hidden_size, output_size)
 
         def forward(self, x):
-            x = F.leaky_relu(self.map1(x), 0.1)
-            return F.sigmoid(self.map2(x))
+            x = leaky_relu(self.map1(x), 0.1)
+            return sigmoid(self.map2(x))
 
-    class DeepMLP(nn.Module):
+    class DeepMLP(Module):
         def __init__(self, input_size, hidden_size, output_size):
             super(DeepMLP, self).__init__()
-            self.map1 = nn.Linear(input_size, hidden_size)
-            self.map2 = nn.Linear(hidden_size, hidden_size)
-            self.map3 = nn.Linear(hidden_size, output_size)
+            self.map1 = Linear(input_size, hidden_size)
+            self.map2 = Linear(hidden_size, hidden_size)
+            self.map3 = Linear(hidden_size, output_size)
 
         def forward(self, x):
-            x = F.leaky_relu(self.map1(x), 0.1)
-            x = F.leaky_relu(self.map2(x), 0.1)
-            return F.sigmoid(self.map3(x))
+            x = leaky_relu(self.map1(x), 0.1)
+            x = leaky_relu(self.map2(x), 0.1)
+            return sigmoid(self.map3(x))
     generator = SimpleMLP(input_size=z_dim, hidden_size=50, output_size=DIMENSION)
     discriminator = SimpleMLP(input_size=DIMENSION, hidden_size=100, output_size=1)
     if cuda:
         generator.cuda()
         discriminator.cuda()
-    criterion = nn.BCELoss()
+    criterion = BCELoss()
 
-    d_optimizer = tOpt.Adadelta(discriminator.parameters(), lr=1)
-    g_optimizer = tOpt.Adadelta(generator.parameters(), lr=1)
-    progBar = bar.ProgressBarGAN(1, iterations, "D Loss:(real/fake) %.3f/%.3f,G Loss:%.3f")
+    d_optimizer = Adadelta(discriminator.parameters(), lr=1)
+    g_optimizer = Adadelta(generator.parameters(), lr=1)
+    progBar = ProgressBar(1, iterations, "D Loss:(real/fake) %.3f/%.3f,G Loss:%.3f")
     for train_iter in range(1, iterations + 1):
         for d_index in range(3):
             # 1. Train D on real+fake
             discriminator.zero_grad()
 
             #  1A: Train D on real
-            real_samples = sampler.sample_2d(lut_2d, bs)
+            real_samples = sample_2d(lut_2d, bs)
             d_real_data = Variable(torch.Tensor(real_samples))
             if cuda:
                 d_real_data = d_real_data.cuda()
@@ -138,7 +140,7 @@ if PHRASE == "TRAIN":
         visualizer.show()
 else:
     generator = torch.load("generator.pkl")
-    real_samples = sampler.sample_2d(lut_2d, bs)
+    real_samples = sample_2d(lut_2d, bs)
     latent_samples = torch.randn(bs, z_dim)
     g_gen_input = Variable(latent_samples)
     g_fake_data = generator(g_gen_input)
