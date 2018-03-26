@@ -6,8 +6,7 @@ from skimage import io
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-from keras_commons import sampler as sampler
-from keras_commons import visualize as visualizer
+from models import sampler as sampler, visualize as visualizer
 import torch.nn.functional as F
 from torch import optim as tOpts
 from utils.progressbar.keras import ProgressBarCallback as bar
@@ -78,7 +77,7 @@ if PHRASE == "TRAIN":
             #  1A: Train D on real samples with conditions
             real_samples = numpy.zeros((bs, DIMENSION))
             for i in range(c_dim):
-                real_samples[c_indices[i]:c_indices[i+1], :] = sampler.sample_2d(luts_2d[i], c_indices[i+1]-c_indices[i])
+                real_samples[c_indices[i]:c_indices[i+1], :] = sampler.sample_2d(luts_2d[i], c_indices[i + 1] - c_indices[i])
 
             # first c dimensions is the condition inputs, the last 2 dimensions are samples
             real_samples = Variable(torch.Tensor(real_samples))
