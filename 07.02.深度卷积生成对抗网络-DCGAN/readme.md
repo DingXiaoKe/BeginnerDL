@@ -3,9 +3,9 @@
 本节的例子包括生成MNIST手写数字、生成STL数据集中的飞机图像、生成动漫头像以及生成名人人脸头像
 # 1.生成MNIST手写数字
 运行30个Epoch之后的图像如下<br/>
-![images](results/MNIST_30_Keras.png)
+![images](results/MNIST_30_Keras.png)<br/>
 生成动画如下<br/>
-![images](results/MNIST_30_Keras.gif)
+![images](results/MNIST_30_Keras.gif)<br/>
 生成模型h5文件文件为Keras_Mnist_Generator_dcGAN.h5,在[百度云盘](https://pan.baidu.com/s/1JWLMbibaH1yGZKcIvyT4hQ#list/path=%2F%E6%A8%A1%E5%9E%8B)
 
 # 2.生成STL数据集的飞机图像-pytorch和keras实现
@@ -29,9 +29,9 @@
 
 # 4.生成名人人脸
 运行50个Epoch之后的图像如下<br/>
-![images](results/Faces_50.png)
+![images](results/Faces_50.png)<br/>
 生成动画如下<br/>
-![images](results/Faces_50.gif)
+![images](results/Faces_50.gif)<br/>
 生成模型pth文件文件为Faces_Generator.pth,在[百度云盘](https://pan.baidu.com/s/1JWLMbibaH1yGZKcIvyT4hQ#list/path=%2F%E6%A8%A1%E5%9E%8B)
 
 
