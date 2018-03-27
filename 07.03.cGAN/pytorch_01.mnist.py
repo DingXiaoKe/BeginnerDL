@@ -1,5 +1,7 @@
+# coding=utf-8
 import os, time
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 import itertools
 import pickle
 import imageio
@@ -9,10 +11,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
-from utils.progressbar.keras import ProgressBarCallback as bar
-
+from lib.utils.progressbar.ProgressBar import ProgressBar
+GPU_NUMS = 1
 # G(z)
-cuda = False
 class generator(nn.Module):
     # initializers
     def __init__(self, d=128):
@@ -78,22 +79,7 @@ def normal_init(m, mean, std):
         m.weight.data.normal_(mean, std)
         m.bias.data.zero_()
 
-# fixed noise & label
-temp_z_ = torch.randn(10, 100)
-fixed_z_ = temp_z_
-fixed_y_ = torch.zeros(10, 1)
-for i in range(9):
-    fixed_z_ = torch.cat([fixed_z_, temp_z_], 0)
-    temp = torch.ones(10, 1) + i
-    fixed_y_ = torch.cat([fixed_y_, temp], 0)
-
-fixed_z_ = fixed_z_.view(-1, 100, 1, 1)
-fixed_y_label_ = torch.zeros(100, 10)
-fixed_y_label_.scatter_(1, fixed_y_.type(torch.LongTensor), 1)
-fixed_y_label_ = fixed_y_label_.view(-1, 10, 1, 1)
-fixed_z_, fixed_y_label_ = Variable(fixed_z_, volatile=True), Variable(fixed_y_label_, volatile=True)
 def show_result(num_epoch, show = False, save = False, path = 'result.png'):
-
     G.eval()
     test_images = G(fixed_z_, fixed_y_label_)
     G.train()
@@ -143,6 +129,21 @@ def show_train_hist(hist, show = False, save = False, path = 'Train_hist.png'):
     else:
         plt.close()
 
+# fixed noise & label
+temp_z_ = torch.randn(10, 100)
+fixed_z_ = temp_z_
+fixed_y_ = torch.zeros(10, 1)
+for i in range(9):
+    fixed_z_ = torch.cat([fixed_z_, temp_z_], 0)
+    temp = torch.ones(10, 1) + i
+    fixed_y_ = torch.cat([fixed_y_, temp], 0)
+
+fixed_z_ = fixed_z_.view(-1, 100, 1, 1)
+fixed_y_label_ = torch.zeros(100, 10)
+fixed_y_label_.scatter_(1, fixed_y_.type(torch.LongTensor), 1)
+fixed_y_label_ = fixed_y_label_.view(-1, 10, 1, 1)
+fixed_z_, fixed_y_label_ = Variable(fixed_z_.cuda() if GPU_NUMS > 1 else fixed_z_, volatile=True), Variable(fixed_y_label_.cuda() if GPU_NUMS > 1 else fixed_y_label_, volatile=True)
+
 # training parameters
 batch_size = 128
 lr = 0.0002
@@ -156,16 +157,19 @@ transform = transforms.Compose([
     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 ])
 train_loader = torch.utils.data.DataLoader(
-    #pyReader.MyMnistDataSet('../data/mnist.npz', train=True,transform=transform),
-    datasets.MNIST("../data/", train=True, transform=transform, download=True),
+    datasets.MNIST('data', train=True, download=True, transform=transform),
     batch_size=batch_size, shuffle=True)
 
 # network
 G = generator(128)
 D = discriminator(128)
+
 G.weight_init(mean=0.0, std=0.02)
 D.weight_init(mean=0.0, std=0.02)
-if cuda:
+
+G = nn.DataParallel(G)
+D = nn.DataParallel(D)
+if GPU_NUMS > 1:
     G.cuda()
     D.cuda()
 
@@ -194,12 +198,13 @@ train_hist['total_ptime'] = []
 onehot = torch.zeros(10, 10)
 onehot = onehot.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
 fill = torch.zeros([10, 10, img_size, img_size])
+
 for i in range(10):
     fill[i, i, :, :] = 1
 
 print('training start!')
 start_time = time.time()
-progBar = bar.ProgressBarGAN(train_epoch, len(train_loader), "D Loss: %.3f,G Loss:%.3f")
+bar = ProgressBar(train_epoch, len(train_loader), "D Loss:%.3f; G Loss:%.3f")
 for epoch in range(train_epoch):
     D_losses = []
     G_losses = []
@@ -218,7 +223,7 @@ for epoch in range(train_epoch):
     epoch_start_time = time.time()
     y_real_ = torch.ones(batch_size)
     y_fake_ = torch.zeros(batch_size)
-    y_real_, y_fake_ = Variable(y_real_.cuda() if cuda else y_real_), Variable(y_fake_.cuda() if cuda else y_fake_)
+    y_real_, y_fake_ = Variable(y_real_.cuda() if GPU_NUMS > 1 else y_real_), Variable(y_fake_.cuda() if GPU_NUMS > 1 else y_fake_)
     for x_, y_ in train_loader:
         # train discriminator D
         D.zero_grad()
@@ -228,10 +233,10 @@ for epoch in range(train_epoch):
         if mini_batch != batch_size:
             y_real_ = torch.ones(mini_batch)
             y_fake_ = torch.zeros(mini_batch)
-            y_real_, y_fake_ = Variable(y_real_.cuda() if cuda else y_real_), Variable(y_fake_.cuda() if cuda else y_fake_)
+            y_real_, y_fake_ = Variable(y_real_.cuda() if GPU_NUMS > 1 else y_real_), Variable(y_fake_.cuda() if GPU_NUMS > 1 else y_fake_)
 
         y_fill_ = fill[y_]
-        x_, y_fill_ = Variable(x_.cuda() if cuda else x_), Variable(y_fill_.cuda() if cuda else y_fill_)
+        x_, y_fill_ = Variable(x_.cuda() if GPU_NUMS > 1 else x_), Variable(y_fill_.cuda() if GPU_NUMS > 1 else y_fill_)
 
         D_result = D(x_, y_fill_).squeeze()
         D_real_loss = BCE_loss(D_result, y_real_)
@@ -240,7 +245,8 @@ for epoch in range(train_epoch):
         y_ = (torch.rand(mini_batch, 1) * 10).type(torch.LongTensor).squeeze()
         y_label_ = onehot[y_]
         y_fill_ = fill[y_]
-        z_, y_label_, y_fill_ = Variable(z_.cuda() if cuda else z_), Variable(y_label_.cuda() if cuda else y_label_), Variable(y_fill_.cuda() if cuda else y_fill_)
+        z_, y_label_, y_fill_ = Variable(z_.cuda() if GPU_NUMS > 1 else z_), Variable(y_label_.cuda() if GPU_NUMS > 1 else y_label_),\
+                                Variable(y_fill_.cuda() if GPU_NUMS > 1 else y_fill_)
 
         G_result = G(z_, y_label_)
         D_result = D(G_result, y_fill_).squeeze()
@@ -262,7 +268,8 @@ for epoch in range(train_epoch):
         y_ = (torch.rand(mini_batch, 1) * 10).type(torch.LongTensor).squeeze()
         y_label_ = onehot[y_]
         y_fill_ = fill[y_]
-        z_, y_label_, y_fill_ = Variable(z_.cuda() if cuda else z_), Variable(y_label_.cuda() if cuda else y_label_), Variable(y_fill_.cuda() if cuda else y_fill_)
+        z_, y_label_, y_fill_ = Variable(z_.cuda() if GPU_NUMS > 1 else z_), Variable(y_label_.cuda() if GPU_NUMS > 1 else y_label_),\
+                                Variable(y_fill_.cuda() if GPU_NUMS > 1 else y_fill_)
 
         G_result = G(z_, y_label_)
         D_result = D(G_result, y_fill_).squeeze()
@@ -273,12 +280,14 @@ for epoch in range(train_epoch):
         G_optimizer.step()
 
         G_losses.append(G_train_loss.data[0])
-        progBar.show(torch.mean(torch.FloatTensor(D_losses)), torch.mean(torch.FloatTensor(G_losses)))
+
+        bar.show(D_train_loss.data[0], G_train_loss.data[0])
+
     epoch_end_time = time.time()
     per_epoch_ptime = epoch_end_time - epoch_start_time
 
-    print('[%d/%d] - ptime: %.2f, loss_d: %.3f, loss_g: %.3f' % ((epoch + 1), train_epoch, per_epoch_ptime, torch.mean(torch.FloatTensor(D_losses)),
-                                                                 torch.mean(torch.FloatTensor(G_losses))))
+    # print('[%d/%d] - ptime: %.2f, loss_d: %.3f, loss_g: %.3f' % ((epoch + 1), train_epoch, per_epoch_ptime, torch.mean(torch.FloatTensor(D_losses)),
+    #                                                              torch.mean(torch.FloatTensor(G_losses))))
     fixed_p = root + 'Fixed_results/' + model + str(epoch + 1) + '.png'
     show_result((epoch+1), save=True, path=fixed_p)
     train_hist['D_losses'].append(torch.mean(torch.FloatTensor(D_losses)))

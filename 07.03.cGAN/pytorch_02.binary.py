@@ -11,6 +11,7 @@ import torch.nn.functional as F
 from torch import optim as tOpts
 from utils.progressbar.keras import ProgressBarCallback as bar
 import imageio
+
 PHRASE = "TRAIN"
 DIMENSION = 2
 cuda = False
