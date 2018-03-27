@@ -9,8 +9,9 @@ from keras import layers as KLayers
 from keras import optimizers as KOpts
 import numpy as np
 from matplotlib import pyplot as plt
+plt.switch_backend('agg')
 
-PHRASE = "TEST"
+PHRASE = "TRAIN"
 GPU_NUMS = 2
 batchSize = 100
 epochs = 30
@@ -19,7 +20,7 @@ cfg = MNISTConfig()
 if PHRASE == "TRAIN":
     np.random.seed(1000)
     randomDim = 100
-    (X_train, y_train), (X_test, y_test) = read_mnist()
+    (X_train, y_train), (X_test, y_test) = read_mnist("../ganData/mnist.npz")
     X_train = (X_train.astype(np.float32) - 127.5)/127.5
     X_train = X_train.reshape(60000, 784)
 
@@ -175,8 +176,17 @@ if PHRASE == "TRAIN":
             noise = np.random.normal(0, 1, size=[100, randomDim])
             generatedImages = generator.predict(noise)
             generatedImages = generatedImages.reshape(100, 28, 28)
-            samples_image.append(generatedImages)
-
+            # samples_image.append(generatedImages)
+            fig, axs = plt.subplots(10, 10)
+            fig.suptitle("Generated digits", fontsize=12)
+            cnt = 0
+            for i in range(10):
+                for j in range(10):
+                    axs[i,j].imshow(generatedImages[cnt,:,:], plt.cm.gray)
+                    axs[i,j].axis('off')
+                    cnt += 1
+            fig.savefig("checkpoints/%d.png" % e)
+            plt.close()
     generator.save("mnist_generator.h5")
 else:
     generator = KModels.load_model("mnist_generator.h5")
