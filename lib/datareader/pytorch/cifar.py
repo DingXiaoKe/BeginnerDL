@@ -11,8 +11,10 @@ class Cifar10DataSet(Dataset):
         self.transform = transform
         self.target_transform = target_transform
         reader = DataReader(self.root)
-        self.train_data, self.train_label = reader.readData("train", subFolder=subFolder, image_shape=(32,32,3))
-        self.test_data, self.test_label = reader.readData("test", subFolder=subFolder, image_shape=(32,32,3))
+        if train == True:
+            self.train_data, self.train_label = reader.readData("train", subFolder=subFolder, image_shape=(32,32,3))
+        else:
+            self.test_data, self.test_label = reader.readData("test", subFolder=subFolder, image_shape=(32,32,3))
 
     def __getitem__(self, index):
         if self.train:

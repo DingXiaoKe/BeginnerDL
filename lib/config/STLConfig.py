@@ -9,7 +9,7 @@ class STLConfig(Config):
         self.BATCH_SIZE = 100
         self.IMAGE_SIZE = 96
         self.DATA_PATH = "../data/STL/"
-        self.GAN_DATA_PATH = "../ganData/STL/"
+        self.GAN_DATA_PATH = "../ganData/STL/train/"
         self.NUM_WORKERS_LOAD_IMAGE = 4
         self.IMAGE_CHANNEL = 3
         self.BATCH_SIZE = 50
