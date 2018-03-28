@@ -1,88 +1,131 @@
 # coding=utf-8
-import os, time
-import matplotlib.pyplot as plt
-plt.switch_backend('agg')
-import itertools
-import pickle
-import imageio
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torchvision import datasets, transforms
+import itertools
+
+from torchvision.transforms import Compose,Scale,ToTensor, Normalize
+from torch.nn import Module, ConvTranspose2d, BatchNorm2d, Conv2d,BCELoss,DataParallel
+from torch.nn.functional import relu, leaky_relu, tanh, sigmoid
+from torchvision.datasets import MNIST
+from torch.optim import Adam
 from torch.autograd import Variable
+from matplotlib import pyplot as plt
+plt.switch_backend('agg')
+from lib.datareader.pytorch.MNIST import MNISTDataSet
 from lib.utils.progressbar.ProgressBar import ProgressBar
+
 GPU_NUMS = 1
 # G(z)
-class generator(nn.Module):
-    # initializers
-    def __init__(self, d=128):
-        super(generator, self).__init__()
-        self.deconv1_1 = nn.ConvTranspose2d(100, d*2, 4, 1, 0)
-        self.deconv1_1_bn = nn.BatchNorm2d(d*2)
-        self.deconv1_2 = nn.ConvTranspose2d(10, d*2, 4, 1, 0)
-        self.deconv1_2_bn = nn.BatchNorm2d(d*2)
-        self.deconv2 = nn.ConvTranspose2d(d*4, d*2, 4, 2, 1)
-        self.deconv2_bn = nn.BatchNorm2d(d*2)
-        self.deconv3 = nn.ConvTranspose2d(d*2, d, 4, 2, 1)
-        self.deconv3_bn = nn.BatchNorm2d(d)
-        self.deconv4 = nn.ConvTranspose2d(d, 1, 4, 2, 1)
+'''
+定义Generator,
+输入为input和label
+input = [?,100,1,1]
+label = [?, 10,1,1]
 
-    # weight_init
+input => [?,100,1,1] => [?,256,4,4]
+label => [?,10,1,1] => [?,256,4,4]
+
+然后合并在一起变为[?,512,4,4]
+然后继续扩展=>[?,256,8,8] => [?,128,16,16] => [128,1,32,32]
+'''
+class Generator(Module):
+    def __init__(self, depth):
+        super(Generator, self).__init__()
+        # ?,100,1,1 => ?,256,4,4
+        self.deconv1_1    = ConvTranspose2d(in_channels=100, out_channels=depth * 2, kernel_size=4, stride=1, padding=0)
+        self.deconv1_1_bn = BatchNorm2d(depth * 2)
+        self.deconv1_2    = ConvTranspose2d(10, depth*2, 4, 1, 0)
+        self.deconv1_2_bn = BatchNorm2d(depth*2)
+        self.deconv2      = ConvTranspose2d(depth*4, depth*2, 4, 2, 1)
+        self.deconv2_bn   = BatchNorm2d(depth*2)
+        self.deconv3      = ConvTranspose2d(depth*2, depth, 4, 2, 1)
+        self.deconv3_bn   = BatchNorm2d(depth)
+        self.deconv4      = ConvTranspose2d(depth, 1, 4, 2, 1)
     def weight_init(self, mean, std):
         for m in self._modules:
             normal_init(self._modules[m], mean, std)
 
-    # forward method
     def forward(self, input, label):
-        x = F.relu(self.deconv1_1_bn(self.deconv1_1(input)))
-        y = F.relu(self.deconv1_2_bn(self.deconv1_2(label)))
-        x = torch.cat([x, y], 1)
-        x = F.relu(self.deconv2_bn(self.deconv2(x)))
-        x = F.relu(self.deconv3_bn(self.deconv3(x)))
-        x = F.tanh(self.deconv4(x))
-        # x = F.relu(self.deconv4_bn(self.deconv4(x)))
-        # x = F.tanh(self.deconv5(x))
+        network = self.deconv1_1(input)
+        network = self.deconv1_1_bn(network)
+        network = relu(network)
 
-        return x
+        network_branch = self.deconv1_2(label)
+        network_branch = self.deconv1_2_bn(network_branch)
+        network_branch = relu(network_branch)
 
-class discriminator(nn.Module):
-    # initializers
-    def __init__(self, d=128):
-        super(discriminator, self).__init__()
-        self.conv1_1 = nn.Conv2d(1, int(d/2), 4, 2, 1)
-        self.conv1_2 = nn.Conv2d(10, int(d/2), 4, 2, 1)
-        self.conv2 = nn.Conv2d(d, d*2, 4, 2, 1)
-        self.conv2_bn = nn.BatchNorm2d(d*2)
-        self.conv3 = nn.Conv2d(d*2, d*4, 4, 2, 1)
-        self.conv3_bn = nn.BatchNorm2d(d*4)
-        self.conv4 = nn.Conv2d(d * 4, 1, 4, 1, 0)
+        network = torch.cat([network, network_branch], dim=1)
 
-    # weight_init
+        network = self.deconv2(network)
+        network = self.deconv2_bn(network)
+        network = relu(network)
+
+        network = self.deconv3(network)
+        network = self.deconv3_bn(network)
+        network = relu(network)
+
+        network = self.deconv4(network)
+        network = tanh(network)
+
+        return network
+
+'''
+定义Discriminator
+输入为input和label
+input = [?,1,32,32]
+label = [?, 10,32,32]
+
+input => [?,100,32,32] => [?,64,4,4]
+label => [?,10,32,32] => [?,64,4,4]
+
+然后合并在一起变为[?,128,16,16]
+然后继续扩展=>[?,256,8,8] => [?,512,4,4] => [128,1,1,1]
+'''
+class Discriminator(Module):
+    def __init__(self, depth):
+        super(Discriminator, self).__init__()
+        self.conv1_1  = Conv2d(1, int(depth/2), 4, 2, 1)
+        self.conv1_2  = Conv2d(10, int(depth/2), 4, 2, 1)
+        self.conv2    = Conv2d(depth, depth*2, 4, 2, 1)
+        self.conv2_bn = BatchNorm2d(depth*2)
+        self.conv3    = Conv2d(depth*2, depth*4, 4, 2, 1)
+        self.conv3_bn = BatchNorm2d(depth*4)
+        self.conv4    = Conv2d(depth * 4, 1, 4, 1, 0)
+
     def weight_init(self, mean, std):
         for m in self._modules:
             normal_init(self._modules[m], mean, std)
 
-    # forward method
     def forward(self, input, label):
-        x = F.leaky_relu(self.conv1_1(input), 0.2)
-        y = F.leaky_relu(self.conv1_2(label), 0.2)
-        x = torch.cat([x, y], 1)
-        x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
-        x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
-        x = F.sigmoid(self.conv4(x))
+        network = self.conv1_1(input)
+        network = leaky_relu(network, 0.2)
 
-        return x
+        network_branch = self.conv1_2(label)
+        network_branch = leaky_relu(network_branch, 0.2)
+
+        network = torch.cat([network, network_branch], 1)
+
+        network = self.conv2(network)
+        network = self.conv2_bn(network)
+        network = leaky_relu(network, 0.2)
+
+        network = self.conv3(network)
+        network = self.conv3_bn(network)
+        network = leaky_relu(network, 0.2)
+
+        network = self.conv4(network)
+        network = sigmoid(network)
+
+        return network
 
 def normal_init(m, mean, std):
-    if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
+    if isinstance(m, ConvTranspose2d) or isinstance(m, Conv2d):
         m.weight.data.normal_(mean, std)
         m.bias.data.zero_()
 
 def show_result(num_epoch, show = False, save = False, path = 'result.png'):
-    G.eval()
-    test_images = G(fixed_z_, fixed_y_label_)
-    G.train()
+    Net_G.eval()
+    test_images = Net_G(fixed_z_, fixed_y_label_)
+    Net_G.train()
 
     size_figure_grid = 10
     fig, ax = plt.subplots(size_figure_grid, size_figure_grid, figsize=(5, 5))
@@ -105,30 +148,6 @@ def show_result(num_epoch, show = False, save = False, path = 'result.png'):
     else:
         plt.close()
 
-def show_train_hist(hist, show = False, save = False, path = 'Train_hist.png'):
-    x = range(len(hist['D_losses']))
-
-    y1 = hist['D_losses']
-    y2 = hist['G_losses']
-
-    plt.plot(x, y1, label='D_loss')
-    plt.plot(x, y2, label='G_loss')
-
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-
-    plt.legend(loc=4)
-    plt.grid(True)
-    plt.tight_layout()
-
-    if save:
-        plt.savefig(path)
-
-    if show:
-        plt.show()
-    else:
-        plt.close()
-
 # fixed noise & label
 temp_z_ = torch.randn(10, 100)
 fixed_z_ = temp_z_
@@ -145,70 +164,57 @@ fixed_y_label_ = fixed_y_label_.view(-1, 10, 1, 1)
 fixed_z_, fixed_y_label_ = Variable(fixed_z_.cuda() if GPU_NUMS > 1 else fixed_z_, volatile=True), Variable(fixed_y_label_.cuda() if GPU_NUMS > 1 else fixed_y_label_, volatile=True)
 
 # training parameters
-batch_size = 128
-lr = 0.0002
-train_epoch = 20
+BATCH_SIZE = 100
+LR = 0.0002
+EPOCHS = 20
 
 # data_loader
-img_size = 32
-transform = transforms.Compose([
-    transforms.Scale(img_size),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+IMG_SIZE = 32
+'''
+生成网络
+'''
+Net_G = Generator(depth=128)
+Net_D = Discriminator(depth=128)
+Net_G.weight_init(mean=0.0, std=0.02)
+Net_D.weight_init(mean=0.0, std=0.02)
+
+Net_G = DataParallel(Net_G)
+Net_D = DataParallel(Net_D)
+if GPU_NUMS > 1:
+    Net_G.cuda()
+    Net_D.cuda()
+'''
+读入数据并进行预处理
+'''
+transform = Compose([
+    Scale(IMG_SIZE),
+    ToTensor(),
+    Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 ])
 train_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('data', train=True, download=True, transform=transform),
-    batch_size=batch_size, shuffle=True)
+    # MNIST('data', train=True, download=True, transform=transform),
+    MNISTDataSet('../ganData/mnist.npz', train=True, transform=transform),
+    batch_size=BATCH_SIZE, shuffle=True)
 
-# network
-G = generator(128)
-D = discriminator(128)
 
-G.weight_init(mean=0.0, std=0.02)
-D.weight_init(mean=0.0, std=0.02)
-
-G = nn.DataParallel(G)
-D = nn.DataParallel(D)
-if GPU_NUMS > 1:
-    G.cuda()
-    D.cuda()
-
-# Binary Cross Entropy loss
-BCE_loss = nn.BCELoss()
-
-# Adam optimizer
-G_optimizer = optim.Adam(G.parameters(), lr=lr, betas=(0.5, 0.999))
-D_optimizer = optim.Adam(D.parameters(), lr=lr, betas=(0.5, 0.999))
-
-# results save folder
-root = 'MNIST_cDCGAN_results/'
-model = 'MNIST_cDCGAN_'
-if not os.path.isdir(root):
-    os.mkdir(root)
-if not os.path.isdir(root + 'Fixed_results'):
-    os.mkdir(root + 'Fixed_results')
-
-train_hist = {}
-train_hist['D_losses'] = []
-train_hist['G_losses'] = []
-train_hist['per_epoch_ptimes'] = []
-train_hist['total_ptime'] = []
+'''
+开始训练
+'''
+BCE_loss = BCELoss()
+G_optimizer = Adam(Net_G.parameters(), lr=LR, betas=(0.5, 0.999))
+D_optimizer = Adam(Net_D.parameters(), lr=LR, betas=(0.5, 0.999))
+bar = ProgressBar(EPOCHS, len(train_loader), "D Loss:%.3f; G Loss:%.3f")
 
 # label preprocess
 onehot = torch.zeros(10, 10)
 onehot = onehot.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
-fill = torch.zeros([10, 10, img_size, img_size])
+fill = torch.zeros([10, 10, IMG_SIZE, IMG_SIZE])
 
 for i in range(10):
     fill[i, i, :, :] = 1
 
-print('training start!')
-start_time = time.time()
-bar = ProgressBar(train_epoch, len(train_loader), "D Loss:%.3f; G Loss:%.3f")
-for epoch in range(train_epoch):
-    D_losses = []
-    G_losses = []
-
+bar = ProgressBar(EPOCHS, len(train_loader), "D Loss:%.3f; G Loss:%.3f")
+for epoch in range(EPOCHS):
     # learning rate decay
     if (epoch+1) == 11:
         G_optimizer.param_groups[0]['lr'] /= 10
@@ -220,95 +226,61 @@ for epoch in range(train_epoch):
         D_optimizer.param_groups[0]['lr'] /= 10
         print("learning rate change!")
 
-    epoch_start_time = time.time()
-    y_real_ = torch.ones(batch_size)
-    y_fake_ = torch.zeros(batch_size)
-    y_real_, y_fake_ = Variable(y_real_.cuda() if GPU_NUMS > 1 else y_real_), Variable(y_fake_.cuda() if GPU_NUMS > 1 else y_fake_)
-    for x_, y_ in train_loader:
-        # train discriminator D
-        D.zero_grad()
+    # y_real_ = torch.ones(BATCH_SIZE)
+    # y_fake_ = torch.zeros(BATCH_SIZE)
+    # y_real_, y_fake_ = Variable(y_real_.cuda() if GPU_NUMS > 1 else y_real_), Variable(y_fake_.cuda() if GPU_NUMS > 1 else y_fake_)
+    label_true = torch.ones(BATCH_SIZE)
+    label_false = torch.zeros(BATCH_SIZE)
+    label_true_var  = Variable(label_true.cuda() if GPU_NUMS > 1 else label_true)
+    label_false_var = Variable(label_false.cuda() if GPU_NUMS > 1 else label_false)
+    for img_real, label_real in train_loader:
+        Net_D.zero_grad()
+        label_real = label_real.type(torch.LongTensor)
 
-        mini_batch = x_.size()[0]
+        '''
+         真值损失
+         '''
+        label_real = fill[label_real] # 将[BATCH_SIZE]，变为=>[BATCH_SIZE,10,IMAGE_SIZE,IMAGE_SIZE]
+        image_real_var = Variable(img_real.cuda() if GPU_NUMS > 1 else img_real)
+        label_real_var = Variable(label_real.cuda() if GPU_NUMS > 1 else label_real)
+        D_result = Net_D(image_real_var, label_real_var).squeeze()
+        D_real_loss = BCE_loss(D_result, label_true_var)
 
-        if mini_batch != batch_size:
-            y_real_ = torch.ones(mini_batch)
-            y_fake_ = torch.zeros(mini_batch)
-            y_real_, y_fake_ = Variable(y_real_.cuda() if GPU_NUMS > 1 else y_real_), Variable(y_fake_.cuda() if GPU_NUMS > 1 else y_fake_)
 
-        y_fill_ = fill[y_]
-        x_, y_fill_ = Variable(x_.cuda() if GPU_NUMS > 1 else x_), Variable(y_fill_.cuda() if GPU_NUMS > 1 else y_fill_)
 
-        D_result = D(x_, y_fill_).squeeze()
-        D_real_loss = BCE_loss(D_result, y_real_)
-
-        z_ = torch.randn((mini_batch, 100)).view(-1, 100, 1, 1)
-        y_ = (torch.rand(mini_batch, 1) * 10).type(torch.LongTensor).squeeze()
-        y_label_ = onehot[y_]
-        y_fill_ = fill[y_]
-        z_, y_label_, y_fill_ = Variable(z_.cuda() if GPU_NUMS > 1 else z_), Variable(y_label_.cuda() if GPU_NUMS > 1 else y_label_),\
-                                Variable(y_fill_.cuda() if GPU_NUMS > 1 else y_fill_)
-
-        G_result = G(z_, y_label_)
-        D_result = D(G_result, y_fill_).squeeze()
-
-        D_fake_loss = BCE_loss(D_result, y_fake_)
-        D_fake_score = D_result.data.mean()
+        '''
+        假值损失
+        '''
+        img_fake = torch.randn((BATCH_SIZE, 100)).view(-1, 100, 1, 1)
+        label_fake = (torch.rand(BATCH_SIZE, 1) * 10).type(torch.LongTensor).squeeze()
+        img_fake_var = Variable(img_fake.cuda() if GPU_NUMS > 1 else img_fake)
+        label_fake_G_var = Variable(onehot[label_fake].cuda() if GPU_NUMS > 1 else onehot[label_fake])
+        label_fake_D_var = Variable(fill[label_fake].cuda() if GPU_NUMS > 1 else fill[label_fake])
+        G_result = Net_G(img_fake_var, label_fake_G_var)
+        D_result = Net_D(G_result, label_fake_D_var).squeeze()
+        D_fake_loss = BCELoss()(D_result, label_false_var)
 
         D_train_loss = D_real_loss + D_fake_loss
-
         D_train_loss.backward()
         D_optimizer.step()
 
-        D_losses.append(D_train_loss.data[0])
-
-        # train generator G
-        G.zero_grad()
-
-        z_ = torch.randn((mini_batch, 100)).view(-1, 100, 1, 1)
-        y_ = (torch.rand(mini_batch, 1) * 10).type(torch.LongTensor).squeeze()
-        y_label_ = onehot[y_]
-        y_fill_ = fill[y_]
-        z_, y_label_, y_fill_ = Variable(z_.cuda() if GPU_NUMS > 1 else z_), Variable(y_label_.cuda() if GPU_NUMS > 1 else y_label_),\
-                                Variable(y_fill_.cuda() if GPU_NUMS > 1 else y_fill_)
-
-        G_result = G(z_, y_label_)
-        D_result = D(G_result, y_fill_).squeeze()
-
-        G_train_loss = BCE_loss(D_result, y_real_)
-
+        '''
+        生成器训练
+        '''
+        Net_G.zero_grad()
+        img_fake = torch.randn((BATCH_SIZE, 100)).view(-1, 100, 1, 1)
+        label_fake = (torch.rand(BATCH_SIZE, 1) * 10).type(torch.LongTensor).squeeze() # [BATCH_SIZE]
+        img_fake_var = Variable(img_fake.cuda() if GPU_NUMS > 1 else img_fake)
+        label_fake_G_var = Variable(onehot[label_fake].cuda() if GPU_NUMS > 1 else onehot[label_fake]) #[BATCH,10,1,1]
+        label_fake_D_var = Variable(fill[label_fake].cuda() if GPU_NUMS > 1 else fill[label_fake]) #[BATCH,10,IMAGE_SIZE,IMAGE_SIZE]
+        G_result = Net_G(img_fake_var, label_fake_G_var)
+        D_result = Net_D(G_result, label_fake_D_var).squeeze()
+        G_train_loss= BCELoss()(D_result, label_true_var)
         G_train_loss.backward()
         G_optimizer.step()
 
-        G_losses.append(G_train_loss.data[0])
-
         bar.show(D_train_loss.data[0], G_train_loss.data[0])
 
-    epoch_end_time = time.time()
-    per_epoch_ptime = epoch_end_time - epoch_start_time
-
-    # print('[%d/%d] - ptime: %.2f, loss_d: %.3f, loss_g: %.3f' % ((epoch + 1), train_epoch, per_epoch_ptime, torch.mean(torch.FloatTensor(D_losses)),
-    #                                                              torch.mean(torch.FloatTensor(G_losses))))
-    fixed_p = root + 'Fixed_results/' + model + str(epoch + 1) + '.png'
+    fixed_p = 'Fixed_results/' + str(epoch + 1) + '.png'
     show_result((epoch+1), save=True, path=fixed_p)
-    train_hist['D_losses'].append(torch.mean(torch.FloatTensor(D_losses)))
-    train_hist['G_losses'].append(torch.mean(torch.FloatTensor(G_losses)))
-    train_hist['per_epoch_ptimes'].append(per_epoch_ptime)
-
-end_time = time.time()
-total_ptime = end_time - start_time
-train_hist['total_ptime'].append(total_ptime)
-
-print("Avg one epoch ptime: %.2f, total %d epochs ptime: %.2f" % (torch.mean(torch.FloatTensor(train_hist['per_epoch_ptimes'])), train_epoch, total_ptime))
-print("Training finish!... save training results")
-torch.save(G.state_dict(), root + model + 'generator_param.pkl')
-torch.save(D.state_dict(), root + model + 'discriminator_param.pkl')
-with open(root + model + 'train_hist.pkl', 'wb') as f:
-    pickle.dump(train_hist, f)
-
-show_train_hist(train_hist, save=True, path=root + model + 'train_hist.png')
-
-images = []
-for e in range(train_epoch):
-    img_name = root + 'Fixed_results/' + model + str(e + 1) + '.png'
-    images.append(imageio.imread(img_name))
-imageio.mimsave(root + model + 'generation_animation.gif', images, fps=5)
+    torch.save(Net_G.state_dict(),'Fixed_results/netg_%s.pth' % epoch)
