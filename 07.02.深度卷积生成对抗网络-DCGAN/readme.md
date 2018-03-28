@@ -18,6 +18,7 @@
 生成模型pth文件文件为dcGAN_STL_airplane_generator.pth,在[百度云盘](https://pan.baidu.com/s/1JWLMbibaH1yGZKcIvyT4hQ#list/path=%2F%E6%A8%A1%E5%9E%8B)
 
 ## 2.2.Keras版本
+Keras版本一直不收敛，或者是loss爆了，有具体实现的同学可以告诉我
 
 # 3.生成动漫头像-Pytorch实现
 运行190个Epoch之后的图像如下<br/>
