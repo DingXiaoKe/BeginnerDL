@@ -17,5 +17,3 @@ Keras版本的结果如下<br/>
 ![images](results/pytorch_cifar10_cdan.png)<br/>
 ![images](results/pytorch_cifar10_cdan.gif)<br/>
 生成模型pth文件为pytorch_cifar10_cdan_G_19.pth,在[百度云盘](https://pan.baidu.com/s/1JWLMbibaH1yGZKcIvyT4hQ#list/path=%2F%E6%A8%A1%E5%9E%8B)
-
-# 3.STL数据集
