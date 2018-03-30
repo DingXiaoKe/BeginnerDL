@@ -36,12 +36,16 @@ class ProgressBar():
 
         s2 = self.pattern % tuple([float("{:.3f}".format(x)) for x in args])
 
-        s2 = "%s,%s,remain=%s" % (
+        s3 = "%s,%s,remain=%s" % (
             s1, s2, self.train_timer.remain(self.current_index, self.total_count))
-        sys.stdout.write(s2)
+        sys.stdout.write(s3)
         sys.stdout.flush()
         if self.current_index == self.total_count :
             self.train_timer.toc()
+            s3 = "%s,%s,total=%s" % (
+                s1, s2, self.train_timer.average())
+            sys.stdout.write(s3)
+            sys.stdout.flush()
             self.current_index = 0
             print("\r")
             self.current_epoch += 1

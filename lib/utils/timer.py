@@ -30,3 +30,6 @@ class Timer(object):
             self.remain_time = (time.time() - self.init_time) * (max_iters - iters) / iters
 
         return str(datetime.timedelta(seconds=int(self.remain_time)))
+
+    def average(self):
+        return str("%.3f" % self.average_time)
