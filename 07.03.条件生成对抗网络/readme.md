@@ -28,3 +28,17 @@ Keras版本的结果如下<br/>
 基于../ganData/face的全数据集，可以运行[Code](../common/BuildFaceGenderDataSet.py)来根据性别对图片数据进行分类，生成face_gender数据集
 
 ## 3.3.运行代码
+网络运行较慢，我用的是Telsa M60双核，训练一个batch基本在50min左右。
+
+## 3.4.结果
+对于网络一[Code](pytorch_03.FacesMale.py),运行20个Epoch之后的结构如下图
+![images](results/03/20.png)<br/>
+动画如下
+![images](results/03/20.gif)<br/>
+生成模型pth文件为pytorch_faces_cdan_G_20_net1.pth在[百度云盘](https://pan.baidu.com/s/1JWLMbibaH1yGZKcIvyT4hQ#list/path=%2F%E6%A8%A1%E5%9E%8B)
+
+对于网络二[Code](pytorch_04.FacesMale.py),运行20个Epoch之后的结构如下图
+![images](results/04/20.png)<br/>
+动画如下
+![images](results/04/20.gif)<br/>
+生成模型pth文件为pytorch_faces_cdan_G_20_net2.pth在[百度云盘](https://pan.baidu.com/s/1JWLMbibaH1yGZKcIvyT4hQ#list/path=%2F%E6%A8%A1%E5%9E%8B)
