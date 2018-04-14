@@ -35,4 +35,10 @@ Keras版本一直不收敛，或者是loss爆了，有具体实现的同学可�
 ![images](results/Faces_50.gif)<br/>
 生成模型pth文件文件为Faces_Generator.pth,在[百度云盘](https://pan.baidu.com/s/1JWLMbibaH1yGZKcIvyT4hQ#list/path=%2F%E6%A8%A1%E5%9E%8B)
 
+# 5.Cifar10数据集
+运行10个Epoch之后的图像如下<br/>
+![images](results/cifar_10.png)</br/>
+生成动画如下<br/>
+![images](results/cifar_10.gif)<br/>
+生成模型pth文件文件为cifar10_dcgan_Generator.pth,在[百度云盘](https://pan.baidu.com/s/1JWLMbibaH1yGZKcIvyT4hQ#list/path=%2F%E6%A8%A1%E5%9E%8B)
 
