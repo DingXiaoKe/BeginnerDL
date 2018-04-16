@@ -7,7 +7,7 @@ import numpy as np
 from lib.datareader.common import read_image_bgr
 from tqdm import tqdm
 class DataReader(object):
-    def __init__(self, dataPath="../data/cifar10"):
+    def __init__(self, dataPath="/data/cifar10"):
         self.dataPath = dataPath
 
     def readData(self, phrase="train", subFolder="", image_shape=(32,32,3)):

@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 
 class Cifar10DataSet(Dataset):
-    def __init__(self, root="../data/cifar10/", subFolder="", train=True,transform=None, target_transform=None):
+    def __init__(self, root="/data/cifar10/", subFolder="", train=True,transform=None, target_transform=None):
         self.root = root
         self.train = train
         self.transform = transform
